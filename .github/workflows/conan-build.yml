@@ -1,0 +1,81 @@
+name: Build using Conan
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.profile.runner }}
+
+    strategy:
+      fail-fast: false
+
+      # Most of the configurations are on x86_64 Linux, so use that as the base of the matrix.
+      matrix:
+        runner: [ubuntu-22.04]
+        arch: [x86_64]
+        os: [Linux]
+        libcxx: [libstdc++11, libc++]
+        build_type: [Release]
+        compiler:
+          - name: gcc
+            version: 10
+          - name: clang
+            version: 16
+        include:
+          - runner: windows-2022
+            compiler:
+              name: msvc
+              version: 194
+            os: Windows
+            arch: x86_64
+          - runner: macos-14
+            compiler:
+              name: apple-clang
+              version: 15
+            os: Macos
+            arch: armv8
+
+    steps:
+      - name: Install compiler
+        if: ${{ startsWith(matrix.runner, 'ubuntu') }}
+        run: |
+          if [ ${{ matrix.compiler.name }} == "clang" ]
+          then
+              wget https://apt.llvm.org/llvm.sh
+              chmod +x llvm.sh
+              sudo ./llvm.sh ${{ matrix.compiler.version }}
+              rm llvm.sh
+          else
+              sudo apt install g++-${{ matrix.compiler.version }} -y
+          fi
+
+      - name: Install Conan
+        run: pip install conan
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Build
+        run: >
+          conan build .
+          -pr:a ./conan/profiles/${{ matrix.compiler.name }}
+          -s:a os=${{ matrix.os }}
+          -s:a arch=${{ matrix.arch }}
+          -s:a build_type=${{ matrix.build_type }}
+          -s:a compiler.cppstd=20
+          -b missing
+        env:
+          COMPILER_VERSION: ${{ matrix.compiler.version }}
+          LIBCXX: ${{ matrix.libcxx }}
+
+      - name: Test
+        shell: bash
+        # Lowercase the build type: Release -> release
+        run: ctest --preset conan-$(echo ${{ matrix.build_type }} | tr "[:upper:]" "[:lower:]") --output-on-failure
