@@ -28,13 +28,15 @@ jobs:
               name: clang
               version: 16
               libcxx: libc++
-          - runner: ubuntu-22.04
-            arch: x86_64
-            os: Linux
-            compiler:
-              name: clang
-              version: 16
-              libcxx: libstdc++11
+          # Todo: Fix clang with libstdc++ std::expected
+          # https://github.com/llvm/llvm-project/issues/62801
+          # - runner: ubuntu-22.04
+          #   arch: x86_64
+          #   os: Linux
+          #   compiler:
+          #     name: clang
+          #     version: 16
+          #     libcxx: libstdc++11
           - runner: windows-2022
             compiler:
               name: msvc
