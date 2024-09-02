@@ -13,19 +13,28 @@ jobs:
     strategy:
       fail-fast: false
 
-      # Most of the configurations are on x86_64 Linux, so use that as the base of the matrix.
       matrix:
-        runner: [ubuntu-22.04]
-        arch: [x86_64]
-        os: [Linux]
-        libcxx: [libstdc++11, libc++]
-        build_type: [Release]
-        compiler:
-          - name: gcc
-            version: 10
-          - name: clang
-            version: 16
         include:
+          - runner: ubuntu-22.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              - name: gcc
+                version: 10
+          - runner: ubuntu-22.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              - name: clang
+                version: 16
+                libcxx: libc++
+          - runner: ubuntu-22.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              - name: clang
+                version: 16
+                libcxx: libstdc++11
           - runner: windows-2022
             compiler:
               name: msvc
@@ -68,12 +77,12 @@ jobs:
           -pr:a ./conan/profiles/${{ matrix.compiler.name }}
           -s:a os=${{ matrix.os }}
           -s:a arch=${{ matrix.arch }}
-          -s:a build_type=${{ matrix.build_type }}
+          -s:a build_type=Release
           -s:a compiler.cppstd=20
           -b missing
         env:
           COMPILER_VERSION: ${{ matrix.compiler.version }}
-          LIBCXX: ${{ matrix.libcxx }}
+          LIBCXX: ${{ matrix.compiler.libcxx }}
 
       - name: Test
         shell: bash
