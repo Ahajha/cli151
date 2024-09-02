@@ -58,6 +58,8 @@ jobs:
               chmod +x llvm.sh
               sudo ./llvm.sh ${{ matrix.compiler.version }}
               rm llvm.sh
+              # Only necessary for libc++
+              sudo apt install libc++-${{ matrix.compiler.version }}-dev libc++abi-${{ matrix.compiler.version }}-dev
           else
               sudo apt install g++-${{ matrix.compiler.version }} -y
           fi
