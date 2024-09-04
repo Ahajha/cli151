@@ -32,8 +32,7 @@ int main(int argc, char* argv[])
 {
 	auto result = cli::parse<mycli>(argc, argv);
 
-	std::cout << cli::detail::get_field_name_str_view<mycli, &mycli::number>() << '\n';
-	std::cout << cli::detail::get_source_location<mycli, &mycli::number>() << '\n';
+	std::cout << cli::detail::get_member_name<&mycli::number>() << '\n';
 
-	// static_assert(cli::detail::get_field_name_str_view<mycli, &mycli::number>() == "number");
+	static_assert(cli::detail::get_member_name<&mycli::number>() == "number");
 }
