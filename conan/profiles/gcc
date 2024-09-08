@@ -4,7 +4,7 @@
 [settings]
 compiler=gcc
 compiler.version={{compiler_version}}
-compiler.libcxx={{libcxx}}
+compiler.libcxx=libstdc++11
 
 [conf]
 tools.build:compiler_executables={"c": "gcc-{{compiler_version}}", "cpp": "g++-{{compiler_version}}"}
