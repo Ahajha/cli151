@@ -7,15 +7,24 @@
 namespace cli151
 {
 
+// Arbitrary string to indicate that a parameter should not change.
+// Mainly useful for if you want to change the abbr or arg_name fields
+// while keeping the default generated ones for previous fields.
+constexpr static std::string_view default_ = "<default>";
+
+// Indicates that the field should be omitted, i.e. no help text,
+// no abbreviated name, or no long name.
+constexpr static std::string_view none = "";
+
 template <class T>
 struct arg
 {
 	T ptr;
 
 	// Ideally, this is the order people tend to want to use these
-	std::string_view help = "__";     // Almost always
-	std::string_view abbr = "__";     // Occasionally, to deal with conflicts
-	std::string_view arg_name = "__"; // Rarely, usually reflected
+	std::string_view help = default_;     // Almost always
+	std::string_view abbr = default_;     // Occasionally, to deal with conflicts
+	std::string_view arg_name = default_; // Rarely, usually reflected
 };
 
 template <class T>
