@@ -7,32 +7,28 @@
 namespace cli151
 {
 
+// Arbitrary string to indicate that a parameter should not change.
+// Mainly useful for if you want to change the abbr or arg_name fields
+// while keeping the default generated ones for previous fields.
+constexpr static std::string_view default_ = "<default>";
+
+// Indicates that the field should be omitted, i.e. no help text,
+// no abbreviated name, or no long name.
+constexpr static std::string_view none = "";
+
 template <class T>
 struct arg
 {
-	T ptr_to_member;
-	// If empty, no value. Mainly applicable for short names.
-	std::string_view field_name;
-	std::string_view short_name;
+	T ptr;
 
-	// Should have a few constructors, all constexpr/consteval
-	// This constructor will only be available when reflection is available
-	// Will need to check which compilers support this
-	consteval arg(T t) : ptr_to_member{t}
-	{
-		// reflect the other fields
-	}
-
-	// This should give a compile failure if fn is length 0. Todo: verify
-	// If given a string literal, short_name ends up being a nul character
-	// Should find a way to fix that I guess.
-	consteval arg(T t, std::string_view fn)
-		: ptr_to_member{t}, field_name{fn}, short_name{fn.data(), 1}
-	{}
-	consteval arg(T t, std::string_view fn, std::string_view sn)
-		: ptr_to_member{t}, field_name{fn}, short_name{sn}
-	{}
+	// Ideally, this is the order people tend to want to use these
+	std::string_view help = default_;     // Almost always
+	std::string_view abbr = default_;     // Occasionally, to deal with conflicts
+	std::string_view arg_name = default_; // Rarely, usually reflected
 };
+
+template <class T>
+arg(T, ...) -> arg<T>;
 
 // all args should be a cli::arg
 template <class... Ts>
@@ -57,6 +53,10 @@ struct is_member_pointer<Member Class::*> : std::true_type
 
 template <class... Ts>
 args(Ts...) -> args<std::conditional_t<detail::is_member_pointer<Ts>::value, arg<Ts>, Ts>...>;
+
+template <class T>
+struct meta
+{};
 
 // Probably want some sort of error code
 template <class T>

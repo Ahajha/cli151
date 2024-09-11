@@ -9,23 +9,18 @@ namespace cli = cli151;
 struct mycli
 {
 	int number;
-
 	std::string_view name;
-
-	constexpr static auto args = cli::args(cli::arg{&mycli::number, "number", "n"}, &mycli::name);
-
-	constexpr static auto args1 = cli::args(cli::arg{&mycli::number}, cli::arg{&mycli::name});
-	constexpr static auto args2 = cli::args(&mycli::number, &mycli::name);
 };
 
-struct visitor
+template <>
+struct cli::meta<mycli>
 {
-	void operator()(std::string_view name, int& n) { n = 3; }
-	void operator()(std::string_view name, std::string_view& s) { s = "Hello, World!"; }
-
-	template <typename T>
-	void operator()(const T&)
-	{}
+	using T = mycli;
+	constexpr static auto value = args{
+		// Conflict between name and number for short name
+		arg{&T::number, "The number", "r"},
+		arg{&T::name, "The name", default_, "nAmE"},
+	};
 };
 
 int main(int argc, char* argv[])
