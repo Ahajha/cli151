@@ -16,6 +16,23 @@ constexpr static std::string_view default_ = "<default>";
 // no abbreviated name, or no long name.
 constexpr static std::string_view none = "";
 
+enum class arg_type
+{
+	// The argument is determined by its position in the arguments, and is required
+	positional_required,
+	// The argument is determined by its position in the arguments, and is optional
+	positional_optional,
+	// The argument is determined by keyword (short or long), and is optional
+	keyword,
+	// Have the library guess:
+	// All booleans are keyword arguments
+	// std::optional is guessed to be keyword
+	unspecified,
+
+	// Unbounded containers
+	// std::optionals cannot be positional_required
+};
+
 template <class T>
 struct arg
 {
