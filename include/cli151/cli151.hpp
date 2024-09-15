@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cli151/detail/concepts.hpp>
+#include <cli151/error.hpp>
+
 #include <expected>
 #include <string_view>
 #include <type_traits>
@@ -56,18 +59,6 @@ struct args : Ts...
 	consteval args(auto... args_) : Ts{args_}... {}
 };
 
-namespace detail
-{
-template <class T>
-struct is_member_pointer : std::false_type
-{};
-
-template <class Class, class Member>
-struct is_member_pointer<Member Class::*> : std::true_type
-{};
-
-} // namespace detail
-
 template <class... Ts>
 args(Ts...) -> args<std::conditional_t<detail::is_member_pointer<Ts>::value, arg<Ts>, Ts>...>;
 
@@ -77,13 +68,18 @@ struct meta
 
 // Probably want some sort of error code
 template <class T>
-auto parse(int argc, char* argv[]) -> std::expected<T, int>
+auto parse(int argc, char* argv[]) -> expected<T>
 {
+	T result;
+
+	// Map 1: Convert short names to long names
+	// Map 2: Convert long names to {memptr, used}
+
 	// First construct a map from names to... something. Function pointers, I think.
 	// Basically, when we find a name, figure out what to do next.
 	// These functions should take the list of args (in), the current index (inout), and the
 	// struct(out).
-	return T{};
+	return result;
 }
 
 } // namespace cli151

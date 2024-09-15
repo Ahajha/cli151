@@ -6,8 +6,8 @@ class Cli151Conan(ConanFile):
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain"
     
-    #def requirements(self):
-    #    self.test_requires("catch2/[>=3.5.2 <4]")
+    def requirements(self):
+        self.requires("frozen/1.2.0")
 
     def layout(self):
         cmake_layout(self)
