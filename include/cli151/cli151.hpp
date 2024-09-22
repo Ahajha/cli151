@@ -33,11 +33,8 @@ enum class arg_type
 	// std::optionals cannot be positional_required
 };
 
-template <class T>
-struct arg
+struct opt
 {
-	T ptr;
-
 	// Ideally, this is the order people tend to want to use these
 	std::string_view help = default_;     // Almost always
 	std::string_view abbr = default_;     // Occasionally, to deal with conflicts
@@ -45,15 +42,26 @@ struct arg
 };
 
 template <class T>
+struct arg
+{
+	T memptr;
+	opt options;
+};
+
+template <class T>
 arg(T, ...) -> arg<T>;
 
-// all args should be a cli::arg
+// all args should be a pointer-to-member
 template <class... Ts>
-struct args : Ts...
+struct args
 {
+	std::tuple<arg<Ts>...> args_;
+
 	// Each arg should either be a pointer-to-member or a cli::arg
 	// All pointer-to-members will be used to construct a cli::arg
-	consteval args(auto... args_) : Ts{args_}... {}
+	template <class... Us>
+	consteval args(Us... params) : args_{arg<Ts>{params}...}
+	{}
 };
 
 namespace detail

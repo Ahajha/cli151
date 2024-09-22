@@ -10,6 +10,7 @@ struct mycli
 {
 	int number;
 	std::string_view name;
+	int other_number;
 };
 
 template <>
@@ -18,8 +19,9 @@ struct cli::meta<mycli>
 	using T = mycli;
 	constexpr static auto value = args{
 		// Conflict between name and number for short name
-		arg{&T::number, "The number", "r"},
-		arg{&T::name, "The name", default_, "nAmE"},
+		arg{&T::number, {.help = "The number", .abbr = "r"}},
+		arg{&T::name, {.help = "The name", .arg_name = "nAmE"}},
+		&T::other_number,
 	};
 };
 
