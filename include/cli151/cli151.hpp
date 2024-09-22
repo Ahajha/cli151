@@ -50,10 +50,10 @@ struct arg
 {
 	T memptr;
 	opt options;
-};
 
-template <class T>
-arg(T, ...) -> arg<T>;
+	consteval arg(T m) : memptr{m} {}
+	consteval arg(T m, opt options_) : memptr{m}, options{options_} {}
+};
 
 // all args should be a pointer-to-member
 template <class... Ts>
