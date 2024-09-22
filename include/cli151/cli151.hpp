@@ -64,20 +64,8 @@ struct args
 	{}
 };
 
-namespace detail
-{
-template <class T>
-struct is_member_pointer : std::false_type
-{};
-
-template <class Class, class Member>
-struct is_member_pointer<Member Class::*> : std::true_type
-{};
-
-} // namespace detail
-
 template <class... Ts>
-args(Ts...) -> args<std::conditional_t<detail::is_member_pointer<Ts>::value, arg<Ts>, Ts>...>;
+args(Ts...) -> args<std::conditional_t<std::is_member_pointer_v<Ts>, arg<Ts>, Ts>...>;
 
 template <class T>
 struct meta
