@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cli151/detail/concepts.hpp>
+#include <cli151/detail/helpers.hpp>
 #include <cli151/error.hpp>
 
 #include <expected>
@@ -80,6 +81,13 @@ template <class T>
 auto parse(int argc, char* argv[]) -> expected<T>
 {
 	T result;
+
+	constexpr static auto& info = meta<T>::value.args_;
+
+	constexpr static auto& arg_name = std::get<0>(info).options.arg_name;
+
+	constexpr static auto data = arg_name.data();
+	constexpr static auto kebabed = detail::kebab<arg_name.size(), &data>();
 
 	// Map 1: Convert short names to long names
 	// Map 2: Convert long names to {memptr, used}

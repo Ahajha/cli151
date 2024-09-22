@@ -1,34 +1,30 @@
 #pragma once
 
-#include <frozen/string.h>
-
-#include <algorithm>
 #include <array>
+#include <string_view>
 #include <utility>
 
 namespace cli151::detail
 {
 
-template <std::size_t N, std::size_t... Is>
-constexpr auto to_array(const char (&arr)[N], std::index_sequence<Is...>) -> std::array<char, N - 1>
+template <std::size_t N, const char* const* str, std::size_t... Is>
+struct kebbaber
 {
-	return {{arr[Is]...}};
+	constexpr static std::array<char, N> data{{((*str)[Is] == '_' ? '-' : (*str)[Is])...}};
+};
+
+template <std::size_t N, const char* const* str, std::size_t... Is>
+consteval auto to_array_and_kebab(std::index_sequence<Is...>) -> std::string_view
+{
+	return {kebbaber<N, str, Is...>::data.data(), N};
 }
 
-template <std::size_t N>
-constexpr auto to_array(const char (&arr)[N]) -> std::array<char, N - 1>
+// Given a string and a size, produces a new string at compile time
+// with all underscores replaced with dashes.
+template <std::size_t N, const char* const* str>
+consteval auto kebab() -> std::string_view
 {
-	return to_array(arr, std::make_index_sequence<N - 1>());
-}
-
-template <std::size_t N>
-consteval auto kebab(const char (&arr)[N]) -> frozen::string
-{
-	auto arr2 = to_array(arr);
-
-	std::ranges::replace(arr2, '_', '-');
-
-	return arr2;
+	return to_array_and_kebab<N, str>(std::make_index_sequence<N>());
 }
 
 } // namespace cli151::detail
