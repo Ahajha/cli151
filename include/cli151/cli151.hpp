@@ -5,6 +5,7 @@
 
 #include <expected>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 
 namespace cli151
