@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <utility>
 
 namespace cli151::detail
 {
