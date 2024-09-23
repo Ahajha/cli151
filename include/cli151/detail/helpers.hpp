@@ -37,12 +37,18 @@ consteval auto kebab() -> std::string_view
 template <class T, std::size_t N>
 struct kebabbed_name
 {
-private:
-	constexpr static auto arg_name = std::get<N>(cli151::meta<T>::value.args_).options.arg_name;
+  private:
+	constexpr static auto info = std::get<N>(cli151::meta<T>::value.args_);
+	constexpr static auto maybe_arg_name = info.options.arg_name;
+	constexpr static auto arg_name =
+		maybe_arg_name == default_ ? get_member_name<info.memptr>() : maybe_arg_name;
 	constexpr static auto data = arg_name.data();
-public:
+
+  public:
 	// The kebabbed name of the nth field of T
-	constexpr static auto name = detail::kebab<arg_name.size(), &data>();
+	// If the field name was manually specified, do not autokebab
+	constexpr static auto name =
+		maybe_arg_name == default_ ? detail::kebab<arg_name.size(), &data>() : arg_name;
 };
 
 } // namespace cli151::detail
