@@ -47,6 +47,7 @@ struct opt
 };
 
 template <class T>
+	requires std::is_member_pointer_v<T>
 struct arg
 {
 	T memptr;
@@ -56,21 +57,29 @@ struct arg
 	consteval arg(T m, opt options_) : memptr{m}, options{options_} {}
 };
 
-// all args should be a pointer-to-member
 template <class... Ts>
+	requires ((sizeof...(Ts) > 0) && (std::is_member_pointer_v<Ts> && ...))
 struct args
 {
 	std::tuple<arg<Ts>...> args_;
 
 	// Each arg should either be a pointer-to-member or a cli::arg
 	// All pointer-to-members will be used to construct a cli::arg
-	template <class... Us>
-	consteval args(Us... params) : args_{arg<Ts>{params}...}
-	{}
+	consteval args(auto... params) : args_{arg<Ts>(params)...} {}
+};
+
+template <class T>
+struct to_memptr {
+	using type = T;
+};
+
+template <class T>
+struct to_memptr<arg<T>> {
+	using type = T;
 };
 
 template <class... Ts>
-args(Ts...) -> args<std::conditional_t<std::is_member_pointer_v<Ts>, arg<Ts>, Ts>...>;
+args(Ts...) -> args<typename to_memptr<Ts>::type...>;
 
 template <class T>
 struct meta
