@@ -19,9 +19,9 @@ struct cli::meta<mycli>
 	using T = mycli;
 	constexpr static auto value = args{
 		// Conflict between name and number for short name
-		arg{&T::number, {.help = "The number", .abbr = "r", .arg_name = "number"}},
+		arg{&T::number, {.help = "The number", .abbr = "r", .arg_name = "first_number"}},
 		&T::name,
-		arg{&T::other_number, {.help = "Another number", .arg_name = "other_number"}},
+		arg{&T::other_number, {.help = "Another number"}},
 	};
 };
 

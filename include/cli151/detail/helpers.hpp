@@ -1,15 +1,12 @@
 #pragma once
 
+#include <cli151/common.hpp>
+#include <cli151/detail/reflect.hpp>
+
 #include <array>
 #include <string_view>
-#include <utility>
 #include <tuple>
-
-namespace cli151
-{
-template <class T>
-struct meta;
-}
+#include <utility>
 
 namespace cli151::detail
 {
