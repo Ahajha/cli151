@@ -14,13 +14,20 @@ auto parse(int argc, char* argv[]) -> expected<T>
 {
 	T result;
 
-	// Map 1: Convert short names to long names
-	// Map 2: Convert long names to {memptr, used}
+	using dispatcher = detail::handler_dispatcher<T>;
 
-	// First construct a map from names to... something. Function pointers, I think.
-	// Basically, when we find a name, figure out what to do next.
-	// These functions should take the list of args (in), the current index (inout), and the
-	// struct(out).
+	const auto& index_map = dispatcher::index_map;
+	const auto& callback_map = dispatcher::callback_map;
+	std::array<bool, index_map.size()> used;            // filled with false?
+	std::fill_n(used.begin(), index_map.size(), false); // is there a constructor for this?
+
+	// High level overview:
+	// - Figure out if this is positional or keyword
+	// - If keyword, parse out the key and look up the callback
+	// - If positional, go by the next positional arg to use (can use the indexes... I think a scan
+	//   for the next positional is okay for now. Maybe can optimize later.)
+	// - Call the callback (which should advance the position to the next arg to look at)
+
 	return result;
 }
 

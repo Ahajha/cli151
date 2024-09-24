@@ -69,6 +69,7 @@ template <class... Ts>
 struct args
 {
 	std::tuple<arg<Ts>...> args_;
+	std::size_t n_args = sizeof...(Ts);
 
 	// Each arg should either be a pointer-to-member or a cli::arg
 	// All pointer-to-members will be used to construct a cli::arg

@@ -1,7 +1,11 @@
 #pragma once
 
 #include <cli151/common.hpp>
+#include <cli151/detail/handlers.hpp>
 #include <cli151/detail/reflect.hpp>
+
+#include <frozen/string.h>
+#include <frozen/unordered_map.h>
 
 #include <array>
 #include <string_view>
@@ -47,5 +51,28 @@ struct kebabbed_name
 	constexpr static auto name =
 		maybe_arg_name == default_ ? detail::kebab<arg_name.size(), &data>() : arg_name;
 };
+
+template <class T>
+using handler_t = auto(*)(T&, int, const char*[], int&) -> expected<void>;
+
+template <class T, class Seq>
+struct handler_dispatcher_impl
+{};
+
+template <class T, std::size_t... Is>
+struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
+{
+	constexpr static frozen::unordered_map<frozen::string, std::size_t, sizeof...(Is)> index_map{
+		std::pair{frozen::string{kebabbed_name<T, Is>::name}, Is}...,
+	};
+
+	constexpr static std::array<handler_t<T>, sizeof...(Is)> callback_map{
+		parse_value_into_struct<T, std::get<Is>(cli151::meta<T>::value.args_).memptr>...,
+	};
+};
+
+template <class T>
+using handler_dispatcher =
+	handler_dispatcher_impl<T, std::make_index_sequence<cli151::meta<T>::value.n_args>>;
 
 } // namespace cli151::detail

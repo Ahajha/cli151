@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cli151/error.hpp>
+#include <cli151/common.hpp>
 
 #include <cassert>
 #include <charconv>
@@ -36,7 +36,8 @@ inline auto parse_value(T& out, const int argc, const char* argv[], int& current
 	const std::string_view view{argv[current_index]};
 	auto [ptr, ec] = std::from_chars(view.data(), view.data() + view.size(), out);
 
-	if (ec)
+	// TODO: This check is probably wrong
+	if (ec == std::errc{})
 	{
 		return std::unexpected<error>(4); // arbitrary for now
 	}
@@ -44,16 +45,16 @@ inline auto parse_value(T& out, const int argc, const char* argv[], int& current
 	return {};
 }
 
-template <class T, class M>
-auto parse_value_into_struct(T& out, M T::* memptr, const int argc, const char* argv[],
-                             int& current_index) -> expected<void>
+template <class T, auto Memptr>
+auto parse_value_into_struct(T& out, const int argc, const char* argv[], int& current_index)
+	-> expected<void>
 {
 	if (current_index >= argc)
 	{
 		return std::unexpected<error>(3); // arbitrary for now
 	}
 
-	return parse_value(out.*memptr, argc, argv, current_index);
+	return parse_value(out.*Memptr, argc, argv, current_index);
 }
 
 } // namespace cli151::detail
