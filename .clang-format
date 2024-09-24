@@ -25,3 +25,4 @@ AlwaysBreakAfterReturnType: None
 PenaltyReturnTypeOnItsOwnLine: 1000000
 ColumnLimit: 100
 AlwaysBreakTemplateDeclarations: true
+IndentPPDirectives: AfterHash
