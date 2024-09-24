@@ -88,11 +88,13 @@ jobs:
               sudo apt install g++-${{ matrix.compiler.version }} -y
           fi
 
-      - name: Install Conan
-        run: pip install conan
-
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Install Conan
+        run: |
+          pip install conan
+          conan config install conan/settings_user.yml
 
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
