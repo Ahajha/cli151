@@ -28,25 +28,44 @@ jobs:
               name: clang
               version: 16
               libcxx: libc++
-          # Todo: Fix clang with libstdc++ std::expected
-          # https://github.com/llvm/llvm-project/issues/62801
-          # - runner: ubuntu-22.04
-          #   arch: x86_64
-          #   os: Linux
-          #   compiler:
-          #     name: clang
-          #     version: 16
-          #     libcxx: libstdc++11
+          # Test clang versions before and after
+          # https://github.com/llvm/llvm-project/issues/62801 is fixed
+          - runner: ubuntu-22.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              name: clang
+              version: 18
+              libcxx: libstdc++11
+          - runner: ubuntu-22.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              name: clang
+              version: 19
+              libcxx: libstdc++11
           - runner: windows-2022
             compiler:
               name: msvc
               version: 194
             os: Windows
             arch: x86_64
+          - runner: windows-2019
+            compiler:
+              name: msvc
+              version: 192
+            os: Windows
+            arch: x86_64
           - runner: macos-14
             compiler:
               name: apple-clang
               version: 15
+            os: Macos
+            arch: armv8
+          - runner: macos-13
+            compiler:
+              name: apple-clang
+              version: 14
             os: Macos
             arch: armv8
 
@@ -60,8 +79,11 @@ jobs:
               chmod +x llvm.sh
               sudo ./llvm.sh ${{ matrix.compiler.version }}
               rm llvm.sh
-              # Only necessary for libc++
-              sudo apt install libc++-${{ matrix.compiler.version }}-dev libc++abi-${{ matrix.compiler.version }}-dev
+
+              if [ ${{ matrix.compiler.libcxx }} == "libc++" ]
+              then
+                  sudo apt install libc++-${{ matrix.compiler.version }}-dev libc++abi-${{ matrix.compiler.version }}-dev
+              fi
           else
               sudo apt install g++-${{ matrix.compiler.version }} -y
           fi

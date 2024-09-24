@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cli151/detail/compat.hpp>
+
 #include <expected>
 #include <string_view>
 #include <type_traits>
@@ -24,7 +26,7 @@ constexpr static std::string_view none = "";
 using error = int;
 
 template <class T>
-using expected = std::expected<T, error>;
+using expected = compat::expected<T, error>;
 
 enum class arg_type
 {
