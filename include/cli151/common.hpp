@@ -2,7 +2,6 @@
 
 #include <cli151/detail/compat.hpp>
 
-#include <expected>
 #include <string_view>
 #include <type_traits>
 

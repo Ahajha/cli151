@@ -1,9 +1,8 @@
 #pragma once
 
 #include <cli151/common.hpp>
+#include <cli151/detail/compat.hpp>
 #include <cli151/detail/helpers.hpp>
-
-#include <expected>
 
 namespace cli151
 {
