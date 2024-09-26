@@ -15,10 +15,8 @@ auto parse(int argc, char* argv[]) -> expected<T>
 
 	using dispatcher = detail::handler_dispatcher<T>;
 
-	const auto& index_map = dispatcher::index_map;
 	const auto& callback_map = dispatcher::callback_map;
-	std::array<bool, index_map.size()> used;            // filled with false?
-	std::fill_n(used.begin(), index_map.size(), false); // is there a constructor for this?
+	std::array<bool, dispatcher::index_map.size()> used{};
 
 	// High level overview:
 	// - Figure out if this is positional or keyword
