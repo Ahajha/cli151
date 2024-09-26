@@ -18,11 +18,13 @@
 namespace cli151::compat
 {
 using tl::expected;
-}
+using tl::unexpected;
+} // namespace cli151::compat
 #else
 #	define CLI151_HAS_STD_EXPECTED true
 namespace cli151::compat
 {
 using std::expected;
-}
+using std::unexpected;
+} // namespace cli151::compat
 #endif

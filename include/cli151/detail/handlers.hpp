@@ -39,7 +39,7 @@ inline auto parse_value(T& out, const int argc, const char* argv[], int& current
 	// TODO: This check is probably wrong
 	if (ec == std::errc{})
 	{
-		return std::unexpected<error>(4); // arbitrary for now
+		return compat::unexpected<error>(4); // arbitrary for now
 	}
 
 	return {};
@@ -51,7 +51,7 @@ auto parse_value_into_struct(T& out, const int argc, const char* argv[], int& cu
 {
 	if (current_index >= argc)
 	{
-		return std::unexpected<error>(3); // arbitrary for now
+		return compat::unexpected<error>(3); // arbitrary for now
 	}
 
 	return parse_value(out.*Memptr, argc, argv, current_index);
