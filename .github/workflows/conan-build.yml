@@ -62,12 +62,13 @@ jobs:
               version: 15
             os: Macos
             arch: armv8
-          - runner: macos-13
-            compiler:
-              name: apple-clang
-              version: 14
-            os: Macos
-            arch: armv8
+          # XCode problems - we need to be able to specify the version of XCode being used
+          #- runner: macos-13
+          #  compiler:
+          #    name: apple-clang
+          #    version: 14
+          #  os: Macos
+          #  arch: x86_64
 
     steps:
       - name: Install compiler
