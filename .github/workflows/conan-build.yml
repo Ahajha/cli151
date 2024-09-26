@@ -21,6 +21,7 @@ jobs:
             compiler:
               name: gcc
               version: 12
+              cppstd: 23
           - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
@@ -28,6 +29,7 @@ jobs:
               name: clang
               version: 16
               libcxx: libc++
+              cppstd: 23
           # Test clang versions before and after
           # https://github.com/llvm/llvm-project/issues/62801 is fixed
           - runner: ubuntu-22.04
@@ -37,6 +39,7 @@ jobs:
               name: clang
               version: 18
               libcxx: libstdc++11
+              cppstd: 23
           - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
@@ -44,22 +47,26 @@ jobs:
               name: clang
               version: 19
               libcxx: libstdc++11
+              cppstd: 23
           - runner: windows-2022
             compiler:
               name: msvc
               version: 194
+              cppstd: 23
             os: Windows
             arch: x86_64
           - runner: windows-2019
             compiler:
               name: msvc
               version: 192
+              cppstd: 20
             os: Windows
             arch: x86_64
           - runner: macos-14
             compiler:
               name: apple-clang
               version: 15
+              cppstd: 23
             os: Macos
             arch: armv8
           # XCode problems - we need to be able to specify the version of XCode being used
@@ -67,6 +74,7 @@ jobs:
           #  compiler:
           #    name: apple-clang
           #    version: 14
+          #    cppstd: 23
           #  os: Macos
           #  arch: x86_64
 
@@ -107,7 +115,7 @@ jobs:
           -s:a os=${{ matrix.os }}
           -s:a arch=${{ matrix.arch }}
           -s:a build_type=Release
-          -s:a compiler.cppstd=23
+          -s:a compiler.cppstd=${{ matrix.compiler.cppstd }}
           -b missing
         env:
           COMPILER_VERSION: ${{ matrix.compiler.version }}
