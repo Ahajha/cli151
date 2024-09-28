@@ -1,21 +1,13 @@
 #pragma once
 
+#include <cli151/detail/concepts.hpp>
+
 #include <string_view>
 
 namespace cli151::detail2
 {
 
-template <class T>
-struct pointer_to_member
-{};
-
-template <class C, class M>
-struct pointer_to_member<M C::*>
-{
-	using class_ = C;
-	using member = M;
-};
-
+#ifndef __GNUC__
 struct ptr
 {
 	const void* ptr;
@@ -24,7 +16,6 @@ struct ptr
 template <class T>
 extern T external;
 
-#ifndef __GNUC__
 // MSVC needs a little extra help with inserting the field name into the function name
 template <auto Memptr>
 [[nodiscard]] consteval auto get_function_name() -> std::string_view
@@ -39,7 +30,7 @@ template <auto Memptr>
 #ifdef __GNUC__
 	return std::string_view{__PRETTY_FUNCTION__};
 #else
-	using T = pointer_to_member<decltype(Memptr)>::class_;
+	using T = detail::pointer_to_member<decltype(Memptr)>::class_;
 	return get_function_name<ptr{&(external<T>.*Memptr)}>();
 #endif
 }
