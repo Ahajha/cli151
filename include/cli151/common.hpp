@@ -25,6 +25,7 @@ enum class error_type
 {
 	invalid_key,
 	invalid_number, // TODO split this one
+	no_more_positional_args,
 };
 
 struct error

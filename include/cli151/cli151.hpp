@@ -22,15 +22,17 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 	// High level overview:
 	// - Figure out if this is positional or keyword
-	// - If keyword, parse out the key and look up the callback
-	// - If positional, go by the next positional arg to use (can use the indexes... I think a scan
-	//   for the next positional is okay for now. Maybe can optimize later. Not sure if we can do
-	//   the scan at runtime...)
-	//   Nope - we'll need to make an array of indexes of positional args.
+	// - In either case, get the handler and the value to handle
 	// - Call the callback (which should advance the position to the next arg to look at)
+
+	// Eventual TODO: We can probably compile out some of this code when one or more types of args
+	// are entirely missing, for example where all args are positional_required.
+
+	// TODO: Make sure args aren't parsed twice
 
 	// Skip over argv[0]
 	int arg_index = 1;
+	int next_positional_arg_to_parse = 0;
 	while (arg_index < argc)
 	{
 		const std::string_view view = argv[arg_index];
@@ -56,11 +58,12 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 				});
 			}
 
-			const auto handler = dispatcher::index_to_handler_map[handler_index->second];
-
 			const auto value = delimiter_pos == std::string_view::npos
-			                       ? argv[++arg_index]
+			                       ? argv[arg_index]
 			                       : nodashes.substr(delimiter_pos + 1);
+
+			// TODO: This code is identical in both branches
+			const auto handler = dispatcher::index_to_handler_map[handler_index->second];
 
 			const auto handler_result = handler(result, argc, argv, value, arg_index);
 
@@ -72,6 +75,30 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 		else
 		{
 			// Positional
+
+			if (next_positional_arg_to_parse > dispatcher::positional_args_indexes.size())
+			{
+				// TODO: This may behave differently if there is a trailing container in T
+				return compat::unexpected(error{
+					.type = error_type::no_more_positional_args,
+					.arg_index = arg_index,
+				});
+			}
+
+			const auto handler_index =
+				dispatcher::positional_args_indexes[next_positional_arg_to_parse++];
+
+			const auto value = argv[arg_index];
+
+			// TODO: This code is identical in both branches
+			const auto handler = dispatcher::index_to_handler_map[handler_index];
+
+			const auto handler_result = handler(result, argc, argv, value, arg_index);
+
+			if (!handler_result)
+			{
+				return compat::unexpected(handler_result.error());
+			}
 		}
 	}
 

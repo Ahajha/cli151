@@ -151,6 +151,32 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 	}
 }
 
+template <class T, std::size_t... Is>
+consteval auto make_positional_args_indexes_data()
+{
+	constexpr auto size = ((type_of_arg<T, Is>() == arg_type::positional_required) + ... + 0);
+
+	std::array<std::size_t, size> data;
+
+	std::size_t index = 0;
+
+	const auto adder = [&data, &index]<std::size_t I>()
+	{
+		if constexpr (type_of_arg<T, I>() == arg_type::positional_required)
+		{
+			data[index++] = I;
+		}
+
+		return true;
+	};
+
+	(adder.template operator()<Is>() && ...);
+
+	assert(index == size);
+
+	return data;
+}
+
 template <class T>
 using handler_t = auto(*)(T&, int, const char* const*, std::string_view, int&) -> expected<void>;
 
@@ -172,6 +198,14 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
 		parse_value_into_struct<T, std::get<Is>(meta<T>::value.args_).memptr>...,
 	};
+
+	// Indexes of all the positional arguments in the order they appear.
+	// (TODO: In the future when we handle positional_optional, those will all be at the end)
+	// Potential future TODO: Ideally, and likely in most circumstances, this array will just be
+	// 0, 1, 2, 3, ... In that case, this array serves as an unnecessary indirection. Either we
+	// can skip the array conditionally (likely easy), or we can rearrange the args (likely
+	// difficult).
+	constexpr static auto positional_args_indexes = make_positional_args_indexes_data<T, Is...>();
 };
 
 template <class T>

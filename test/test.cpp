@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
 	std::cout << cli::detail::kebabbed_name<mycli, 0>::name << '\n';
 	std::cout << cli::detail::kebabbed_name<mycli, 1>::name << '\n';
 	std::cout << cli::detail::kebabbed_name<mycli, 2>::name << '\n';
+	std::cout << cli::detail::kebabbed_name<mycli, 3>::name << '\n';
 
 	static_assert(cli::detail::type_of_arg<mycli, 0>() == cli::arg_type::positional_required);
 	static_assert(cli::detail::type_of_arg<mycli, 1>() == cli::arg_type::positional_required);
