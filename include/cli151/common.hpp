@@ -21,8 +21,17 @@ constexpr static std::string_view default_ = "<default>";
 // no abbreviated name, or no long name.
 constexpr static std::string_view none = "";
 
-// temporary
-using error = int;
+enum class error_type
+{
+	invalid_key,
+	invalid_number, // TODO split this one
+};
+
+struct error
+{
+	error_type type;
+	int arg_index;
+};
 
 template <class T>
 using expected = compat::expected<T, error>;

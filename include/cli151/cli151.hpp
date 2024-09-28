@@ -50,7 +50,10 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			if (handler_index == dispatcher::name_to_index_map.end())
 			{
 				// error, arbitrary for now
-				return compat::unexpected(4);
+				return compat::unexpected(error{
+					.type = error_type::invalid_key,
+					.arg_index = arg_index,
+				});
 			}
 
 			const auto handler = dispatcher::index_to_handler_map[handler_index->second];

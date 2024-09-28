@@ -23,10 +23,15 @@ struct cli::meta<mycli>
 		// Conflict between name and number for short name
 		arg{&T::number, {.help = "The number", .abbr = "r", .arg_name = "first_number"}},
 		&T::name,
-		//&T::author,
+		&T::author,
 		arg{&T::other_number, {.help = "Another number"}},
 	};
 };
+
+auto to_string_view(frozen::string str) -> std::string_view
+{
+	return {str.data(), str.data() + str.size()};
+}
 
 int main(int argc, char* argv[])
 {
@@ -35,6 +40,9 @@ int main(int argc, char* argv[])
 	if (!result)
 	{
 		std::cerr << "Error!\n";
+		// TODO: Formatter or magic_enum maybe
+		std::cerr << "Error type = " << static_cast<int>(result.error().type) << '\n';
+		std::cerr << "Error index = " << result.error().arg_index << '\n';
 	}
 	else
 	{
@@ -52,4 +60,14 @@ int main(int argc, char* argv[])
 	std::cout << cli::detail::kebabbed_name<mycli, 0>::name << '\n';
 	std::cout << cli::detail::kebabbed_name<mycli, 1>::name << '\n';
 	std::cout << cli::detail::kebabbed_name<mycli, 2>::name << '\n';
+
+	static_assert(cli::detail::type_of_arg<mycli, 0>() == cli::arg_type::positional_required);
+	static_assert(cli::detail::type_of_arg<mycli, 1>() == cli::arg_type::positional_required);
+	static_assert(cli::detail::type_of_arg<mycli, 2>() == cli::arg_type::keyword);
+	static_assert(cli::detail::type_of_arg<mycli, 3>() == cli::arg_type::keyword);
+
+	for (const auto& [key, value] : cli::detail::handler_dispatcher<mycli>::name_to_index_map)
+	{
+		std::cout << "Key: " << to_string_view(key) << ", Value: " << value << '\n';
+	}
 }

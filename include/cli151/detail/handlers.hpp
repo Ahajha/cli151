@@ -55,10 +55,15 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
 		std::from_chars(current_value.data(), current_value.data() + current_value.size(), out);
 
 	// TODO: This check is probably wrong
-	if (ec == std::errc{})
+	if (ec != std::errc{})
 	{
-		return compat::unexpected<error>(4); // arbitrary for now
+		return compat::unexpected(error{
+			.type = error_type::invalid_number,
+			.arg_index = current_index,
+		});
 	}
+
+	++current_index;
 
 	return {};
 }
@@ -88,10 +93,7 @@ template <class T, auto Memptr>
 auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
                              std::string_view current_value, int& current_index) -> expected<void>
 {
-	if (current_index >= argc)
-	{
-		return compat::unexpected<error>(3); // arbitrary for now
-	}
+	assert(current_index < argc); // Pretty sure, revisit.
 
 	return parse_value(out.*Memptr, argc, argv, current_value, current_index);
 }
