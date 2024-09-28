@@ -35,25 +35,80 @@ consteval auto kebab() -> std::string_view
 	return to_array_and_kebab<N, str>(std::make_index_sequence<N>());
 }
 
+// Provides the kebabbed name of the nth field of T, as well as its abbreviation.
 template <class T, std::size_t N>
 struct kebabbed_name
 {
   private:
-	constexpr static auto info = std::get<N>(cli151::meta<T>::value.args_);
-	constexpr static auto maybe_arg_name = info.options.arg_name;
+	constexpr static auto info = std::get<N>(meta<T>::value.args_);
 	constexpr static auto arg_name =
-		maybe_arg_name == default_ ? get_member_name<info.memptr>() : maybe_arg_name;
-	constexpr static auto data = arg_name.data();
+		info.options.arg_name == default_ ? get_member_name<info.memptr>() : info.options.arg_name;
+	constexpr static auto arg_name_data = arg_name.data();
 
   public:
-	// The kebabbed name of the nth field of T
-	// If the field name was manually specified, do not autokebab
-	constexpr static auto name =
-		maybe_arg_name == default_ ? detail::kebab<arg_name.size(), &data>() : arg_name;
+	// Reflect the name, unless explicitly given
+	constexpr static auto name = info.options.arg_name == default_
+	                                 ? detail::kebab<arg_name.size(), &arg_name_data>()
+	                                 : info.options.arg_name;
+	// Use the first letter of the full name, unless explicitly given
+	constexpr static auto abbr =
+		info.options.abbr == default_ ? name.substr(0, 1) : info.options.abbr;
 };
 
+// Workaround since frozen::string isn't default constructible.
+// The data in the array is arbitrary and will be overwritten.
+template <std::size_t... Is>
+consteval auto default_name_to_index_map_data(std::index_sequence<Is...>)
+{
+	return std::array<std::pair<frozen::string, std::size_t>, sizeof...(Is)>{
+		std::pair{frozen::string{""}, Is}...,
+	};
+}
+
+template <class T, std::size_t... Is>
+consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
+{
+	// We need to pull the processed data rather the raw input
+	constexpr auto n_long_names = (!kebabbed_name<T, Is>::name.empty() + ... + 0);
+	constexpr auto n_short_names = (!kebabbed_name<T, Is>::abbr.empty() + ... + 0);
+
+	constexpr auto size = n_long_names + n_short_names;
+
+	auto data = default_name_to_index_map_data(std::make_index_sequence<size>());
+
+	std::size_t index = 0;
+
+	const auto adder = [&data, &index]<std::size_t I>()
+	{
+		using info = kebabbed_name<T, I>;
+		if constexpr (!info::name.empty())
+		{
+			data[index++] = {info::name, I};
+		}
+		if constexpr (!info::abbr.empty())
+		{
+			data[index++] = {info::abbr, I};
+		}
+
+		return true;
+	};
+
+	(adder.template operator()<Is>() && ...);
+
+	assert(index == size);
+
+	for (const auto& [name, i] : data)
+	{
+		assert(name.size() > 0);
+		assert(name != default_);
+		assert(i < sizeof...(Is));
+	}
+
+	return data;
+}
+
 template <class T>
-using handler_t = auto(*)(T&, int, const char*[], int&) -> expected<void>;
+using handler_t = auto(*)(T&, int, const char* const*, std::string_view, int&) -> expected<void>;
 
 template <class T, class Seq>
 struct handler_dispatcher_impl
@@ -62,12 +117,16 @@ struct handler_dispatcher_impl
 template <class T, std::size_t... Is>
 struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 {
-	constexpr static frozen::unordered_map<frozen::string, std::size_t, sizeof...(Is)> index_map{
-		std::pair{frozen::string{kebabbed_name<T, Is>::name}, Is}...,
-	};
+	// This is only a map from the long name. We need the short names too, and we need to omit
+	// ones which are not specified. Maybe a helper that computes the data? Counting the number
+	// of names is cheap.
 
-	constexpr static std::array<handler_t<T>, sizeof...(Is)> callback_map{
-		parse_value_into_struct<T, std::get<Is>(cli151::meta<T>::value.args_).memptr>...,
+	// Maps long and short names of keyword arguments to the index in the handler map of their
+	constexpr static auto name_to_index_map = frozen::make_unordered_map(
+		make_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
+
+	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
+		parse_value_into_struct<T, std::get<Is>(meta<T>::value.args_).memptr>...,
 	};
 };
 

@@ -29,6 +29,18 @@ int main(int argc, char* argv[])
 {
 	auto result = cli::parse<mycli>(argc, argv);
 
+	if (!result)
+	{
+		std::cerr << "Error!\n";
+	}
+	else
+	{
+		const auto& out = result.value();
+		std::cout << out.number << '\n';
+		std::cout << out.name << '\n';
+		std::cout << out.other_number << '\n';
+	}
+
 	std::cout << cli::detail::get_member_name<&mycli::number>() << '\n';
 
 	static_assert(cli::detail::get_member_name<&mycli::number>() == "number");
