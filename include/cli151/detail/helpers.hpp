@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cli151/common.hpp>
+#include <cli151/detail/concepts.hpp>
 #include <cli151/detail/handlers.hpp>
 #include <cli151/detail/reflect.hpp>
 
@@ -8,6 +9,7 @@
 #include <frozen/unordered_map.h>
 
 #include <array>
+#include <concepts>
 #include <string_view>
 #include <tuple>
 #include <utility>
@@ -55,6 +57,31 @@ struct kebabbed_name
 		info.options.abbr == default_ ? name.substr(0, 1) : info.options.abbr;
 };
 
+// Computes the arg_type of the Nth field of T - evaluating guesses when necessary.
+template <class T, std::size_t N>
+consteval auto type_of_arg() -> arg_type
+{
+	// For the first draft, ignore user input. Just guess. (TODO)
+
+	using type = pointer_to_member<decltype(std::get<N>(meta<T>::value.args_).memptr)>::member;
+
+	// If this is an optional or a bool, it's a keyword.
+	if constexpr (is_optional<type>::value || std::same_as<bool, type>)
+	{
+		return arg_type::keyword;
+	}
+	// Otherwise, if this is the first argument, it's positional.
+	else if constexpr (N == 0)
+	{
+		return arg_type::positional_required;
+	}
+	// Otherwise, it's whatever the previous argument is.
+	else
+	{
+		return type_of_arg<T, N - 1>();
+	}
+};
+
 // Workaround since frozen::string isn't default constructible.
 // The data in the array is arbitrary and will be overwritten.
 template <std::size_t... Is>
@@ -68,43 +95,60 @@ consteval auto default_name_to_index_map_data(std::index_sequence<Is...>)
 template <class T, std::size_t... Is>
 consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 {
-	// We need to pull the processed data rather the raw input
-	constexpr auto n_long_names = (!kebabbed_name<T, Is>::name.empty() + ... + 0);
-	constexpr auto n_short_names = (!kebabbed_name<T, Is>::abbr.empty() + ... + 0);
+	constexpr auto n_long_names =
+		((!kebabbed_name<T, Is>::name.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
+	     0);
+	constexpr auto n_short_names =
+		((!kebabbed_name<T, Is>::abbr.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
+	     0);
 
 	constexpr auto size = n_long_names + n_short_names;
 
-	auto data = default_name_to_index_map_data(std::make_index_sequence<size>());
-
-	std::size_t index = 0;
-
-	const auto adder = [&data, &index]<std::size_t I>()
+	// Temp hack: Seems to be some issues with 0-length data.
+	if constexpr (size == 0)
 	{
-		using info = kebabbed_name<T, I>;
-		if constexpr (!info::name.empty())
-		{
-			data[index++] = {info::name, I};
-		}
-		if constexpr (!info::abbr.empty())
-		{
-			data[index++] = {info::abbr, I};
-		}
-
-		return true;
-	};
-
-	(adder.template operator()<Is>() && ...);
-
-	assert(index == size);
-
-	for (const auto& [name, i] : data)
-	{
-		assert(name.size() > 0);
-		assert(name != default_);
-		assert(i < sizeof...(Is));
+		return std::array<std::pair<frozen::string, std::size_t>, 1>{
+			std::pair{frozen::string{""}, 0},
+		};
 	}
+	else
+	{
+		auto data = default_name_to_index_map_data(std::make_index_sequence<size>());
 
-	return data;
+		std::size_t index = 0;
+
+		const auto adder = [&data, &index]<std::size_t I>()
+		{
+			if constexpr (type_of_arg<T, I>() != arg_type::keyword)
+			{
+				return true;
+			}
+			using info = kebabbed_name<T, I>;
+			if constexpr (!info::name.empty())
+			{
+				data[index++] = {info::name, I};
+			}
+			if constexpr (!info::abbr.empty())
+			{
+				data[index++] = {info::abbr, I};
+			}
+
+			return true;
+		};
+
+		(adder.template operator()<Is>() && ...);
+
+		assert(index == size);
+
+		for (const auto& [name, i] : data)
+		{
+			assert(name.size() > 0);
+			assert(name != default_);
+			assert(i < sizeof...(Is));
+		}
+
+		return data;
+	}
 }
 
 template <class T>

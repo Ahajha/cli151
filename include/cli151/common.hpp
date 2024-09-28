@@ -31,25 +31,28 @@ enum class arg_type
 {
 	// The argument is determined by its position in the arguments, and is required
 	positional_required,
-	// The argument is determined by its position in the arguments, and is optional
-	positional_optional,
+	// The argument is determined by its position in the arguments, and is optional.
+	// positional_optional, // Unsupported for now.
 	// The argument is determined by keyword (short or long), and is optional
 	keyword,
-	// Have the library guess:
-	// All booleans are keyword arguments
-	// std::optional is guessed to be keyword
-	unspecified,
+	// Have the library guess. With no other information, the first argument passed in that is
+	// either a std::optional or a bool is a keyword argument. Any arguments before that are
+	// positional, and any after are also keywords.
+	// TODO: For the first draft, just try to get this guessing working. Guesses mixed with
+	// explicit arg types might be tricky.
+	guess,
 
-	// Unbounded containers
+	// Unbounded containers are sort of special, we'll have to consider them separately.
 	// std::optionals cannot be positional_required
+	// bools are always keyword
 };
 
 struct opt
 {
-	// Ideally, this is the order people tend to want to use these
-	std::string_view help = default_;     // Almost always
-	std::string_view abbr = default_;     // Occasionally, to deal with conflicts
-	std::string_view arg_name = default_; // Rarely, usually reflected
+	std::string_view help = default_;
+	std::string_view abbr = default_;
+	std::string_view arg_name = default_;
+	arg_type type = arg_type::guess;
 };
 
 template <class T>
@@ -68,7 +71,7 @@ template <class... Ts>
 struct args
 {
 	std::tuple<arg<Ts>...> args_;
-	std::size_t n_args = sizeof...(Ts);
+	constexpr static std::size_t n_args = sizeof...(Ts);
 
 	// Each arg should either be a pointer-to-member or a cli::arg
 	// All pointer-to-members will be used to construct a cli::arg

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cli151/common.hpp>
+#include <cli151/detail/concepts.hpp>
 
 #include <cassert>
 #include <charconv>
@@ -60,6 +61,22 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
 	}
 
 	return {};
+}
+
+template <class T>
+inline auto parse_value(std::optional<T>& out, const int argc, const char* const* argv,
+                        std::string_view current_value, int& current_index) -> expected<void>
+{
+	assert(current_index < argc);
+
+	T result;
+	const auto parse_result = parse_value(result, argc, argv, current_value, current_index);
+	if (parse_result)
+	{
+		out.emplace(std::move(result));
+	}
+
+	return parse_result;
 }
 
 // Handlers probably need to be able to handle the first argument being part of the key.

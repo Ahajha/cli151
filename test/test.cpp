@@ -2,6 +2,7 @@
 #include <cli151/detail/reflect.hpp>
 
 #include <iostream>
+#include <optional>
 #include <string_view>
 
 namespace cli = cli151;
@@ -10,6 +11,7 @@ struct mycli
 {
 	int number;
 	std::string_view name;
+	std::optional<std::string_view> author;
 	int other_number;
 };
 
@@ -21,6 +23,7 @@ struct cli::meta<mycli>
 		// Conflict between name and number for short name
 		arg{&T::number, {.help = "The number", .abbr = "r", .arg_name = "first_number"}},
 		&T::name,
+		//&T::author,
 		arg{&T::other_number, {.help = "Another number"}},
 	};
 };
@@ -38,6 +41,7 @@ int main(int argc, char* argv[])
 		const auto& out = result.value();
 		std::cout << out.number << '\n';
 		std::cout << out.name << '\n';
+		std::cout << out.author.value_or("No author") << '\n';
 		std::cout << out.other_number << '\n';
 	}
 
