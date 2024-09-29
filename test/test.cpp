@@ -35,18 +35,21 @@ auto to_string_view(frozen::string str) -> std::string_view
 
 int main(int argc, char* argv[])
 {
-	auto result = cli::parse<mycli>(argc, argv);
+	auto result1 = cli::parse<mycli>(argc, argv);
 
-	if (!result)
+	constexpr std::array args{"main", "123", "--other-number", "456", "bob", "--author", "steve"};
+	auto result2 = cli::parse<mycli>(args.size(), args.data());
+
+	if (!result2)
 	{
 		std::cerr << "Error!\n";
 		// TODO: Formatter or magic_enum maybe
-		std::cerr << "Error type = " << static_cast<int>(result.error().type) << '\n';
-		std::cerr << "Error index = " << result.error().arg_index << '\n';
+		std::cerr << "Error type = " << static_cast<int>(result2.error().type) << '\n';
+		std::cerr << "Error index = " << result2.error().arg_index << '\n';
 	}
 	else
 	{
-		const auto& out = result.value();
+		const auto& out = result2.value();
 		std::cout << out.number << '\n';
 		std::cout << out.name << '\n';
 		std::cout << out.author.value_or("No author") << '\n';
