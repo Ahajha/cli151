@@ -174,6 +174,11 @@ consteval auto make_positional_args_indexes_data()
 
 	assert(index == size);
 
+	for (const auto i : data)
+	{
+		assert(i < sizeof...(Is));
+	}
+
 	return data;
 }
 
