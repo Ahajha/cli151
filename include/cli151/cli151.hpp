@@ -38,6 +38,8 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 		const std::string_view view = argv[arg_index];
 		if (view.at(0) == '-')
 		{
+			// FIXME: Most of this is likely wrong if this arg is a boolean.
+
 			// Either a long or short form
 			// TODO: For now this allows any number of dashes before, this doesn't hurt too much but
 			// is something we will want to revisit.
@@ -58,8 +60,12 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 				});
 			}
 
+			// FIXME: If we run out of args, the ++ will cause an out of bounds.
+			// May need a pre-check and error. Or maybe error in the handler, since it may be a
+			// bool?
+
 			const auto value = delimiter_pos == std::string_view::npos
-			                       ? argv[arg_index]
+			                       ? argv[++arg_index]
 			                       : nodashes.substr(delimiter_pos + 1);
 
 			// TODO: This code is identical in both branches
