@@ -32,7 +32,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 	// Skip over argv[0]
 	int arg_index = 1;
-	int next_positional_arg_to_parse = 0;
+	std::size_t next_positional_arg_to_parse = 0;
 	while (arg_index < argc)
 	{
 		const std::string_view view = argv[arg_index];
@@ -82,7 +82,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 		{
 			// Positional
 
-			if (next_positional_arg_to_parse > dispatcher::positional_args_indexes.size())
+			if (next_positional_arg_to_parse >= dispatcher::positional_args_indexes.size())
 			{
 				// TODO: This may behave differently if there is a trailing container in T
 				return compat::unexpected(error{
