@@ -183,7 +183,8 @@ consteval auto make_positional_args_indexes_data()
 }
 
 template <class T>
-using handler_t = auto(*)(T&, int, const char* const*, std::string_view, int&) -> expected<void>;
+using handler_t = auto(*)(T&, int, const char* const*, std::optional<std::string_view>, int&)
+                      -> expected<void>;
 
 template <class T, class Seq>
 struct handler_dispatcher_impl

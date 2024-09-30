@@ -19,16 +19,15 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 	using dispatcher = detail::handler_dispatcher<T>;
 
 	std::array<bool, dispatcher::index_to_handler_map.size()> used{};
+	// TODO: Make sure args aren't parsed twice
 
 	// High level overview:
 	// - Figure out if this is positional or keyword
 	// - In either case, get the handler and the value to handle
-	// - Call the callback (which should advance the position to the next arg to look at)
+	// - Call the handler (which should advance the position to the next arg to look at)
 
 	// Eventual TODO: We can probably compile out some of this code when one or more types of args
 	// are entirely missing, for example where all args are positional_required.
-
-	// TODO: Make sure args aren't parsed twice
 
 	// Skip over argv[0]
 	int arg_index = 1;
@@ -38,8 +37,6 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 		const std::string_view view = argv[arg_index];
 		if (view.at(0) == '-')
 		{
-			// FIXME: Most of this is likely wrong if this arg is a boolean.
-
 			// Either a long or short form
 			// TODO: For now this allows any number of dashes before, this doesn't hurt too much but
 			// is something we will want to revisit.
@@ -65,8 +62,10 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			// bool?
 
 			const auto value = delimiter_pos == std::string_view::npos
-			                       ? argv[++arg_index]
+			                       ? std::optional<std::string_view>{}
 			                       : nodashes.substr(delimiter_pos + 1);
+
+			++arg_index;
 
 			// TODO: This code is identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index->second];
@@ -94,12 +93,10 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			const auto handler_index =
 				dispatcher::positional_args_indexes[next_positional_arg_to_parse++];
 
-			const auto value = argv[arg_index];
-
 			// TODO: This code is identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index];
 
-			const auto handler_result = handler(result, argc, argv, value, arg_index);
+			const auto handler_result = handler(result, argc, argv, {}, arg_index);
 
 			if (!handler_result)
 			{

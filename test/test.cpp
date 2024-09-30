@@ -13,6 +13,7 @@ struct mycli
 	std::string_view name;
 	std::optional<std::string_view> author;
 	int other_number;
+	bool flag = true;
 };
 
 template <>
@@ -25,6 +26,7 @@ struct cli::meta<mycli>
 		&T::name,
 		&T::author,
 		arg{&T::other_number, {.help = "Another number"}},
+		&T::flag,
 	};
 };
 
@@ -37,7 +39,8 @@ int main(int argc, char* argv[])
 {
 	auto result1 = cli::parse<mycli>(argc, argv);
 
-	constexpr std::array args{"main", "123", "--other-number", "456", "bob", "--author", "steve"};
+	constexpr std::array args{"main", "123",      "--other-number", "456",
+	                          "bob",  "--author", "steve",          "--flag"};
 	auto result2 = cli::parse<mycli>(args.size(), args.data());
 
 	if (!result2)
@@ -50,10 +53,11 @@ int main(int argc, char* argv[])
 	else
 	{
 		const auto& out = result2.value();
-		std::cout << out.number << '\n';
-		std::cout << out.name << '\n';
-		std::cout << out.author.value_or("No author") << '\n';
-		std::cout << out.other_number << '\n';
+		std::cout << "number: " << out.number << '\n';
+		std::cout << "name: " << out.name << '\n';
+		std::cout << "author: " << out.author.value_or("No author") << '\n';
+		std::cout << "other_number: " << out.other_number << '\n';
+		std::cout << "flag: " << out.flag << '\n';
 	}
 
 	std::cout << cli::detail::get_member_name<&mycli::number>() << '\n';

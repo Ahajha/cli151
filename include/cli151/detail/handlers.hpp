@@ -16,45 +16,81 @@ parse_value(out, argc, argv, current_value, current_index) -> expected
 out: If successful, the result is placed here. On error, no change.
 argc/argv: Passed from the command line
 current_value: Based on the argument type and how it was passed on the CLI:
-    Positional argument: The argument itself
-    Keyword argument (roughly) in the form `--<key><delimiter><value>`: <value>
-    Keyword argument (roughly) in the form `--<key> <value>`: <value>
-current_index: The index into argv where current_value comes from.
-    On success, should be incremented to the next argument to parse
-    On failure, should be the index where the error ocurred
-    Assumed to be < argc on entering, may be == argc at exit (to be checked by the caller)
+    If it is a keyword argument with the key and value in the same arg (--key=value), then value.
+    Otherwise nothing,
+current_index: The next index to read from argv, if needed.
+    On success, should be incremented to the next argument to parse.
 */
 
 inline auto parse_value(std::string_view& out, const int argc, const char* const* argv,
-                        std::string_view current_value, int& current_index) -> expected<void>
+                        std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
 {
-	assert(current_index < argc);
-	out = current_value;
-	++current_index;
+	if (current_value.has_value())
+	{
+		out = current_value.value();
+	}
+	else if (current_index >= argc)
+	{
+		return compat::unexpected(error{
+			.type = error_type::missing_args,
+			.arg_index = current_index,
+		});
+	}
+	else
+	{
+		out = argv[current_index++];
+	}
 	return {};
 }
 
 inline auto parse_value(const char*& out, const int argc, const char* const* argv,
-                        std::string_view current_value, int& current_index) -> expected<void>
+                        std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
 {
-	assert(current_index < argc);
-	out = current_value.data();
-	++current_index;
+	if (current_value.has_value())
+	{
+		out = current_value.value().data();
+	}
+	else if (current_index >= argc)
+	{
+		return compat::unexpected(error{
+			.type = error_type::missing_args,
+			.arg_index = current_index,
+		});
+	}
+	else
+	{
+		out = argv[current_index++];
+	}
 	return {};
 }
 
-// FIXME I think this one is broken
 template <class T>
 	requires(std::integral<T> || std::floating_point<T>)
 inline auto parse_value(T& out, const int argc, const char* const* argv,
-                        std::string_view current_value, int& current_index) -> expected<void>
+                        std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
 {
-	assert(current_index < argc);
+	std::string_view view;
+	if (current_value.has_value())
+	{
+		view = current_value.value();
+	}
+	else if (current_index >= argc)
+	{
+		return compat::unexpected(error{
+			.type = error_type::missing_args,
+			.arg_index = current_index,
+		});
+	}
+	else
+	{
+		view = argv[current_index++];
+	}
 
-	auto [ptr, ec] =
-		std::from_chars(current_value.data(), current_value.data() + current_value.size(), out);
+	const auto [ptr, ec] = std::from_chars(view.data(), view.data() + view.size(), out);
 
-	// TODO: This check is probably wrong
 	if (ec != std::errc{})
 	{
 		return compat::unexpected(error{
@@ -63,17 +99,14 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
 		});
 	}
 
-	++current_index;
-
 	return {};
 }
 
 template <class T>
 inline auto parse_value(std::optional<T>& out, const int argc, const char* const* argv,
-                        std::string_view current_value, int& current_index) -> expected<void>
+                        std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
 {
-	assert(current_index < argc);
-
 	T result;
 	const auto parse_result = parse_value(result, argc, argv, current_value, current_index);
 	if (parse_result)
@@ -84,6 +117,15 @@ inline auto parse_value(std::optional<T>& out, const int argc, const char* const
 	return parse_result;
 }
 
+inline auto parse_value(bool& out, [[maybe_unused]] const int argc,
+                        [[maybe_unused]] const char* const* argv,
+                        [[maybe_unused]] std::optional<std::string_view> current_value,
+                        [[maybe_unused]] int& current_index) -> expected<void>
+{
+	out = !out;
+	return {};
+}
+
 // Handlers probably need to be able to handle the first argument being part of the key.
 // We don't want to re-split the arg.
 // Could just add the current value as a param - it should at least be part of the current arg.
@@ -91,10 +133,9 @@ inline auto parse_value(std::optional<T>& out, const int argc, const char* const
 
 template <class T, auto Memptr>
 auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
-                             std::string_view current_value, int& current_index) -> expected<void>
+                             std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
 {
-	assert(current_index < argc); // Pretty sure, revisit.
-
 	return parse_value(out.*Memptr, argc, argv, current_value, current_index);
 }
 
