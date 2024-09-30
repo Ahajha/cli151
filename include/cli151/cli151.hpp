@@ -19,7 +19,6 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 	using dispatcher = detail::handler_dispatcher<T>;
 
 	std::array<bool, dispatcher::index_to_handler_map.size()> used{};
-	// TODO: Make sure args aren't parsed twice
 
 	// High level overview:
 	// - Figure out if this is positional or keyword
@@ -64,6 +63,17 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 			// TODO: This code is (nearly) identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index->second];
+
+			// TODO: "increasing" args, such as -vvv for extra verbosity,
+			// or sets/maps like -DCMAKE_SOMEVAR=somevalue in CMake.
+			if (used[handler_index->second])
+			{
+				return compat::unexpected(error{
+					.type = error_type::duplicate_arg,
+					.arg_index = arg_index,
+				});
+			}
+			used[handler_index->second] = true;
 
 			const auto handler_result = handler(result, argc, argv, value, arg_index);
 

@@ -26,7 +26,8 @@ enum class error_type
 	invalid_key,
 	invalid_number, // TODO split this one
 	no_more_positional_args,
-	missing_args, // TODO this might need more data depending on how many missing args there are
+	missing_args,  // TODO this might need more data depending on how many missing args there are
+	duplicate_arg, // TODO Maybe a pair of indexes to show the duplication
 };
 
 struct error
