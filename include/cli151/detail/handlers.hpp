@@ -126,11 +126,6 @@ inline auto parse_value(bool& out, [[maybe_unused]] const int argc,
 	return {};
 }
 
-// Handlers probably need to be able to handle the first argument being part of the key.
-// We don't want to re-split the arg.
-// Could just add the current value as a param - it should at least be part of the current arg.
-// After that the parsers can use additional args.
-
 template <class T, auto Memptr>
 auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
                              std::optional<std::string_view> current_value, int& current_index)

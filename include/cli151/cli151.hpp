@@ -50,16 +50,11 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 			if (handler_index == dispatcher::name_to_index_map.end())
 			{
-				// error, arbitrary for now
 				return compat::unexpected(error{
 					.type = error_type::invalid_key,
 					.arg_index = arg_index,
 				});
 			}
-
-			// FIXME: If we run out of args, the ++ will cause an out of bounds.
-			// May need a pre-check and error. Or maybe error in the handler, since it may be a
-			// bool?
 
 			const auto value = delimiter_pos == std::string_view::npos
 			                       ? std::optional<std::string_view>{}
@@ -67,7 +62,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 			++arg_index;
 
-			// TODO: This code is identical in both branches
+			// TODO: This code is (nearly) identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index->second];
 
 			const auto handler_result = handler(result, argc, argv, value, arg_index);
@@ -93,7 +88,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			const auto handler_index =
 				dispatcher::positional_args_indexes[next_positional_arg_to_parse++];
 
-			// TODO: This code is identical in both branches
+			// TODO: This code is (nearly) identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index];
 
 			const auto handler_result = handler(result, argc, argv, {}, arg_index);
