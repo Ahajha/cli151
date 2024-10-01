@@ -16,23 +16,23 @@ namespace cli = cli151;
 // Define the struct
 struct mycli
 {
-	int number;
-	std::optional<std::string_view> author;
-	bool cool_flag = false;
+    int number;
+    std::optional<std::string_view> author;
+    bool cool_flag = false;
 };
 
 // Define the meta information
 template <>
 struct cli::meta<mycli>
 {
-	using T = mycli;
-	constexpr static auto value = args{
+    using T = mycli;
+    constexpr static auto value = args{
         // Anything up to the first std::optional or bool is positional and required
-		&T::number,
+        &T::number,
         // From the first std::optional or bool onward, the options are keyword and optional
-		&T::author,
-		&T::cool_flag,
-	};
+        &T::author,
+        &T::cool_flag,
+    };
     // The order is not required to be the same as in the struct, but it is generally assumed they are.
 };
 
@@ -93,12 +93,12 @@ Additional information for each field can be given:
 template <>
 struct cli::meta<mycli>
 {
-	using T = mycli;
-	constexpr static auto value = args{
+    using T = mycli;
+    constexpr static auto value = args{
         // Member pointers and `arg` structs can be mixed and matched
-		&T::number,
-		&T::author,
-		arg{&T::cool_flag, { // Note that this is a substruct
+        &T::number,
+        &T::author,
+        arg{&T::cool_flag, { // Note that this is a substruct
             // Help text
             .help = "This program is really cool if you pass this in!",
             // Short name - by default is the first letter of arg_name
@@ -107,7 +107,7 @@ struct cli::meta<mycli>
             // Override the field name, also note that this overrides the underscore-to-hyphen conversion.
             .arg_name = "really_cool_flag",
         }},
-	};
+    };
 };
 ```
 `abbr` and `arg_name` can be set to `""` to disable it, this is useful if you want a keyword arg that only accepts a long or short form, for example allowing `--cool-flag` but disallowing `-c`.
