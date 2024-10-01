@@ -4,7 +4,11 @@ namespace cli = cli151;
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
+#include <cstdint>
 #include <string_view>
+
+// For now, error tests only check that the parse failed. These tests should be extended once the
+// error interface is more stable.
 
 struct positional_only
 {
@@ -157,6 +161,29 @@ TEST_CASE("keyword args (some missing, out of order, using =, mixed short and lo
 	CHECK(!a6.has_value());
 }
 
+TEST_CASE("keyword args (wrong param)")
+{
+	constexpr std::array args{
+		"main", "--steven=7.89", "-9", "bob", "--1234567890=123",
+	};
+	const auto result = cli::parse<keyword_only>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+TEST_CASE("keyword args (missing arg)")
+{
+	constexpr std::array args{"main", "-1"};
+	const auto result = cli::parse<keyword_only>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+TEST_CASE("keyword args (duplicate arg)")
+{
+	constexpr std::array args{"main", "-1=345", "--arg1", "456"};
+	const auto result = cli::parse<keyword_only>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
 struct keyword_positional_mixed
 {
 	long arg1;
@@ -201,4 +228,64 @@ TEST_CASE("keyword and positional args")
 	CHECK(!a6.has_value());
 	CHECK(f1);
 	CHECK(f2);
+}
+
+template <class Int>
+struct int_only
+{
+	Int number;
+};
+template <class Int>
+struct cli::meta<int_only<Int>>
+{
+	using T = int_only<Int>;
+	constexpr static auto value = args{&T::number};
+};
+
+TEST_CASE_TEMPLATE("Integrals and floats", Int, std::uint8_t, std::int8_t, std::uint16_t,
+                   std::int16_t, std::uint32_t, std::int32_t, std::uint64_t, std::int64_t, float,
+                   double)
+{
+	constexpr std::array args{"main", "1"};
+	const auto result = cli::parse<int_only<Int>>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().number == 1);
+}
+
+// Skip std::uint64_t since we're testing with the max of that type
+TEST_CASE_TEMPLATE("Overflow", Int, std::uint8_t, std::int8_t, std::uint16_t, std::int16_t,
+                   std::uint32_t, std::int32_t, std::int64_t)
+{
+	constexpr std::array args{"main", "18446744073709551615"};
+	const auto result = cli::parse<int_only<Int>>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+TEST_CASE_TEMPLATE("Not a number", Int, std::uint8_t, std::int8_t, std::uint16_t, std::int16_t,
+                   std::uint32_t, std::int32_t, std::uint64_t, std::int64_t, float, double)
+{
+	constexpr std::array args{"main", "not_a_number"};
+	const auto result = cli::parse<int_only<Int>>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+struct underscores
+{
+	std::optional<int> this_keyword_has_a_lot_of_underscores;
+};
+template <>
+struct cli::meta<underscores>
+{
+	using T = underscores;
+	constexpr static auto value = args{&T::this_keyword_has_a_lot_of_underscores};
+};
+
+TEST_CASE("Autokebabbing of names")
+{
+	constexpr std::array args{"main", "--this-keyword-has-a-lot-of-underscores", "234567"};
+	const auto result = cli::parse<underscores>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().this_keyword_has_a_lot_of_underscores == 234567);
 }
