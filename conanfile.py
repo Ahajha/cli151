@@ -38,6 +38,8 @@ class Cli151Conan(ConanFile):
 
         if not self._has_std_expected:
             self.requires("tl-expected/1.1.0")
+        
+        self.test_requires("doctest/2.4.11")
 
     def layout(self):
         cmake_layout(self)
