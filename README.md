@@ -136,7 +136,7 @@ would cause this error since both fields abbreviate to `-n`.
 
 - [structopt](https://github.com/p-ranav/structopt) - For the idea of specifying CLI information declaratively rather than constructing a parser iteratively.
 - [glaze](https://github.com/stephenberry/glaze) - For the idea of using `meta` structs to add information about a struct at compile time.
-- [reflect-cpp]() - For the idea of how to implement compile time reflection of field names from member function pointers.
+- [reflect-cpp](https://github.com/getml/reflect-cpp) - For the idea of how to implement compile time reflection of field names from member function pointers.
 
 ## Future plans
 
