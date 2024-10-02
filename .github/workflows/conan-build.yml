@@ -107,14 +107,19 @@ jobs:
 
     steps:
       - name: Install compiler
-        if: ${{ startsWith(matrix.runner, 'ubuntu') }}
+        if: ${{ matrix.os == 'Linux' }}
         run: |
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
-              wget https://apt.llvm.org/llvm.sh
-              chmod +x llvm.sh
-              sudo ./llvm.sh ${{ matrix.compiler.version }}
-              rm llvm.sh
+              # Weird special case
+              if [ ${{ matrix.compiler.version == 12 }}]
+                sudo apt install clang++-${{ matrix.compiler.version }}
+              else
+                wget https://apt.llvm.org/llvm.sh
+                chmod +x llvm.sh
+                sudo ./llvm.sh ${{ matrix.compiler.version }}
+                rm llvm.sh
+              fi
 
               if [ ${{ matrix.compiler.libcxx }} == "libc++" ]
               then
@@ -129,7 +134,8 @@ jobs:
 
       - name: Install Conan
         run: |
-          pip install conan
+          # We're in a sandbox of some sort, so for simplicity just force install globally
+          PIP_BREAK_SYSTEM_PACKAGES=1 pip install conan
           conan config install conan/settings_user.yml
 
       - name: Install Ninja
