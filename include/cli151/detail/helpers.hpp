@@ -63,7 +63,8 @@ consteval auto type_of_arg() -> arg_type
 {
 	// For the first draft, ignore user input. Just guess. (TODO)
 
-	using type = pointer_to_member<decltype(std::get<N>(meta<T>::value.args_).memptr)>::member;
+	using type =
+		typename pointer_to_member<decltype(std::get<N>(meta<T>::value.args_).memptr)>::member;
 
 	// If this is an optional or a bool, it's a keyword.
 	if constexpr (is_optional<type>::value || std::same_as<bool, type>)
