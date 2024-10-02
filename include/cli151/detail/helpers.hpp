@@ -156,7 +156,7 @@ consteval auto make_positional_args_indexes_data()
 {
 	constexpr auto size = ((type_of_arg<T, Is>() == arg_type::positional_required) + ... + 0);
 
-	std::array<std::size_t, size> data;
+	std::array<std::size_t, size> data{};
 
 	std::size_t index = 0;
 
