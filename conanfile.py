@@ -50,6 +50,9 @@ class Cli151Conan(ConanFile):
             return compiler_version >= "11"
         # Neither clang nor clang has support for floating point from_chars (as of clang 20).
         elif self.settings.compiler == "clang":
+            # For the libstdc++ case, it depends on the installed version, which isn't typically
+            # modeled in conan. To avoid going into the complexity of adding a setting, just assume
+            # no, and always fall back to fast_float. 
             return False
         elif self.settings.compiler == "apple-clang":
             return False
