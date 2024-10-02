@@ -15,13 +15,30 @@ jobs:
 
       matrix:
         include:
+          # Linux/GCC
           - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
             compiler:
               name: gcc
-              version: 12
+              version: 10
+              cppstd: 20
+          - runner: ubuntu-24.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              name: gcc
+              version: 14
               cppstd: 23
+          # Linux/Clang/libc++
+          - runner: ubuntu-22.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              name: clang
+              version: 12
+              libcxx: libc++
+              cppstd: 20
           - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
@@ -30,8 +47,16 @@ jobs:
               version: 16
               libcxx: libc++
               cppstd: 23
-          # Test clang versions before and after
-          # https://github.com/llvm/llvm-project/issues/62801 is fixed
+          # Linux/Clang/libstdc++
+          - runner: ubuntu-20.04
+            arch: x86_64
+            os: Linux
+            compiler:
+              name: clang
+              version: 10
+              libcxx: libstdc++11
+              cppstd: 20
+          # Test before and after https://github.com/llvm/llvm-project/issues/62801 is fixed
           - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
@@ -48,13 +73,7 @@ jobs:
               version: 19
               libcxx: libstdc++11
               cppstd: 23
-          - runner: windows-2022
-            compiler:
-              name: msvc
-              version: 194
-              cppstd: 23
-            os: Windows
-            arch: x86_64
+          # Windows/MSVC
           - runner: windows-2019
             compiler:
               name: msvc
@@ -62,6 +81,14 @@ jobs:
               cppstd: 20
             os: Windows
             arch: x86_64
+          - runner: windows-2022
+            compiler:
+              name: msvc
+              version: 194
+              cppstd: 23
+            os: Windows
+            arch: x86_64
+          # Mac/Apple Clang
           - runner: macos-14
             compiler:
               name: apple-clang
