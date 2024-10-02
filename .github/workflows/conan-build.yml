@@ -113,6 +113,7 @@ jobs:
           then
               # Weird special case
               if [ ${{ matrix.compiler.version == 12 }}]
+              then
                 sudo apt install clang++-${{ matrix.compiler.version }}
               else
                 wget https://apt.llvm.org/llvm.sh
