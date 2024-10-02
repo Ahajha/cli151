@@ -111,16 +111,17 @@ jobs:
         run: |
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
+              if [ ${{ matrix.compiler.version }} == 12 ]
+              then
+                  # Prevents CMake from being unable to compile a test program, unsure why this is needed
+                  # It also needs to be installed before anything else.
+                  sudo apt install libunwind8-dev
+              fi
+
               wget https://apt.llvm.org/llvm.sh
               chmod +x llvm.sh
               sudo ./llvm.sh ${{ matrix.compiler.version }}
               rm llvm.sh
-
-              if [ ${{ matrix.compiler.version }} == 12 ]
-              then
-                  # Prevents CMake from being unable to compile a test program, unsure why this is needed
-                  sudo apt install libunwind8-dev
-              fi
 
               if [ ${{ matrix.compiler.libcxx }} == "libc++" ]
               then
