@@ -111,17 +111,11 @@ jobs:
         run: |
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
-              # Weird special case
-              if [ ${{ matrix.compiler.version }} == 12 ]
-              then
-                sudo apt install clang++-${{ matrix.compiler.version }}
-              else
-                wget https://apt.llvm.org/llvm.sh
-                chmod +x llvm.sh
-                sudo ./llvm.sh ${{ matrix.compiler.version }}
-                rm llvm.sh
-              fi
-
+              wget https://apt.llvm.org/llvm.sh
+              chmod +x llvm.sh
+              sudo ./llvm.sh ${{ matrix.compiler.version }}
+              rm llvm.sh
+              
               if [ ${{ matrix.compiler.libcxx }} == "libc++" ]
               then
                   sudo apt install libc++-${{ matrix.compiler.version }}-dev libc++abi-${{ matrix.compiler.version }}-dev
