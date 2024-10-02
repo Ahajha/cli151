@@ -37,7 +37,7 @@ auto to_string_view(frozen::string str) -> std::string_view
 
 int main(int argc, char* argv[])
 {
-	auto result1 = cli::parse<mycli>(argc, argv);
+	[[maybe_unused]] auto result1 = cli::parse<mycli>(argc, argv);
 
 	constexpr std::array args{"main", "123",      "--other-number", "456",
 	                          "bob",  "--author", "steve",          "--flag"};

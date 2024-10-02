@@ -3,7 +3,9 @@ project(cli151 LANGUAGES CXX)
 
 if (MSVC)
     # Enable conforming __cplusplus macro
-    add_compile_options(/Zc:__cplusplus)
+    add_compile_options(/W4 /Zc:__cplusplus)
+else()
+    add_compile_options(-Wall -Wextra -Wconversion -Wshadow)
 endif()
 
 find_package(frozen REQUIRED)
