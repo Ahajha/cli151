@@ -7,7 +7,6 @@
 namespace cli151
 {
 
-// Probably want some sort of error code
 template <class T>
 auto parse(int argc, const char* const* argv) -> expected<T>
 {
