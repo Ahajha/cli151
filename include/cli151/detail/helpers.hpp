@@ -140,7 +140,7 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 
 		assert(index == size);
 
-		for (const auto& [name, i] : data)
+		for ([[maybe_unused]] const auto& [name, i] : data)
 		{
 			assert(name.size() > 0);
 			assert(name != default_);
@@ -174,7 +174,7 @@ consteval auto make_positional_args_indexes_data()
 
 	assert(index == size);
 
-	for (const auto i : data)
+	for ([[maybe_unused]] const auto i : data)
 	{
 		assert(i < sizeof...(Is));
 	}

@@ -108,7 +108,7 @@ inline auto parse_value(std::optional<T>& out, const int argc, const char* const
                         std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
-	T result;
+	T result{};
 	const auto parse_result = parse_value(result, argc, argv, current_value, current_index);
 	if (parse_result)
 	{
