@@ -33,12 +33,38 @@ class Cli151Conan(ConanFile):
         # Otherwise, play it safe and assume we don't have it.
         return False
 
+    @property
+    def _has_std_from_chars(self):
+        # This is redundant since this library requires C++20, but just for completion.
+        if not valid_min_cppstd(self, "17"):
+            return False
+
+        compiler_version = Version(self.settings.compiler.version)
+        if is_msvc(self):
+            # 16.4, in VS2019
+            return check_min_vs(self, "192", raise_invalid=False)
+        elif self.settings.compiler == "gcc":
+            # TODO: It is technically available in GCC11, but the implementation
+            # might be slower. It's probably okay to use the std version still, but
+            # need to make a final decision.
+            return compiler_version >= "11"
+        # Neither clang nor clang has support for floating point from_chars (as of clang 20).
+        elif self.settings.compiler == "clang":
+            return False
+        elif self.settings.compiler == "apple-clang":
+            return False
+        
+        # Otherwise, play it safe and assume we don't have it.
+        return False
+
     def requirements(self):
         self.requires("frozen/1.2.0")
 
         if not self._has_std_expected:
             self.requires("tl-expected/1.1.0")
-        
+        if not self._has_std_from_chars:
+            self.requires("fast_float/6.1.5")
+
         self.test_requires("doctest/2.4.11")
 
     def layout(self):

@@ -130,6 +130,7 @@ would cause this error since both fields abbreviate to `-n`.
 
 - `frozen` for compile time hash maps
 - `tl::expected` when `std::expected` isn't available (either if the compiler doesn't support it or if in C++20 mode).
+- `fast_float` when `std::from_chars` isn't available
 - `doctest` for unit tests
 
 ## Inspirations

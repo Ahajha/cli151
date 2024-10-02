@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cli151/common.hpp>
+#include <cli151/detail/compat.hpp>
 #include <cli151/detail/concepts.hpp>
 
 #include <cassert>
@@ -89,7 +90,7 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
 		view = argv[current_index++];
 	}
 
-	const auto [ptr, ec] = std::from_chars(view.data(), view.data() + view.size(), out);
+	const auto [ptr, ec] = compat::from_chars(view.data(), view.data() + view.size(), out);
 
 	if (ec != std::errc{})
 	{
