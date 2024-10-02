@@ -112,7 +112,7 @@ jobs:
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
               # Weird special case
-              if [ ${{ matrix.compiler.version == 12 }}]
+              if [ ${{ matrix.compiler.version }} == 12 ]
               then
                 sudo apt install clang++-${{ matrix.compiler.version }}
               else
@@ -135,9 +135,11 @@ jobs:
 
       - name: Install Conan
         run: |
-          # We're in a sandbox of some sort, so for simplicity just force install globally
-          PIP_BREAK_SYSTEM_PACKAGES=1 pip install conan
+          pip install conan
           conan config install conan/settings_user.yml
+        env:
+          # We're in a sandbox of some sort, so for simplicity just force install globally
+          PIP_BREAK_SYSTEM_PACKAGES: "1"
 
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
