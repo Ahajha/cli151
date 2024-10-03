@@ -31,12 +31,12 @@ jobs:
               version: 14
               cppstd: 23
           # Linux/Clang/libc++
-          - runner: ubuntu-20.04
+          - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
             compiler:
               name: clang
-              version: 12
+              version: 13
               libcxx: libc++
               cppstd: 20
           - runner: ubuntu-22.04
@@ -111,13 +111,6 @@ jobs:
         run: |
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
-              if [ ${{ matrix.compiler.version }} == 12 ]
-              then
-                  # Prevents CMake from being unable to compile a test program, unsure why this is needed
-                  # It also needs to be installed before anything else.
-                  sudo apt install libunwind8-dev
-              fi
-
               wget https://apt.llvm.org/llvm.sh
               chmod +x llvm.sh
               sudo ./llvm.sh ${{ matrix.compiler.version }}
