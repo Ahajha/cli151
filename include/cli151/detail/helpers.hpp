@@ -66,7 +66,7 @@ consteval auto type_of_arg() -> arg_type
 		typename pointer_to_member<decltype(std::get<N>(meta<T>::value.args_).memptr)>::member;
 
 	// If this is an optional or a bool, it's a keyword.
-	if constexpr (is_optional<type>::value || std::same_as<bool, type>)
+	if constexpr (is_optional<type>::value || std::is_same_v<bool, type>)
 	{
 		return arg_type::keyword;
 	}
