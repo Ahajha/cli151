@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - name: Install compiler
-        if: ${{ matrix.os }} == 'Linux'
+        if: ${{ matrix.os == 'Linux' }}
         run: |
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
@@ -126,7 +126,7 @@ jobs:
       # Step specifically for this version, probably fine since we likely won't test more than
       # 2 Mac configs at the same time.
       - name: Switch XCode version
-        if: ${{ matrix.os }} == 'Macos' && ${{ matrix.compiler.version }} == '13.2.1'
+        if: ${{ matrix.os == 'Macos' }} && ${{ matrix.compiler.version == '13.2.1' }}
         run: sudo xcode-select -switch /Applications/Xcode_13.2.1.app
 
       - name: Checkout repository
