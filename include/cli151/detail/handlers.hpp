@@ -5,9 +5,8 @@
 #include <cli151/detail/concepts.hpp>
 
 #include <cassert>
-#include <charconv>
-#include <concepts>
 #include <string_view>
+#include <type_traits>
 
 namespace cli151::detail
 {
@@ -68,7 +67,7 @@ inline auto parse_value(const char*& out, const int argc, const char* const* arg
 }
 
 template <class T>
-	requires(std::integral<T> || std::floating_point<T>)
+	requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
 inline auto parse_value(T& out, const int argc, const char* const* argv,
                         std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>

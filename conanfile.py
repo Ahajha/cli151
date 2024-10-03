@@ -22,18 +22,14 @@ class Cli151Conan(ConanFile):
                 # Requires concepts support
                 raise ConanInvalidConfiguration("GCC<10 is not supported")
         elif self.settings.compiler == "clang":
-            if self.settings.compiler.libcxx == "libc++":
-                if compiler_version < "13":
-                    # Requires concepts support in libc++
-                    raise ConanInvalidConfiguration("Clang<13 with libc++ is not supported")
-            else:
-                if compiler_version < "10":
-                    # Requires concepts support in libstdc++, optimistically we assume this is the case.
-                    raise ConanInvalidConfiguration("Clang<10 is not supported")
+            if compiler_version < "10":
+                # Requires concepts support
+                raise ConanInvalidConfiguration("Clang<10 is not supported")
         elif self.settings.compiler == "apple-clang":
-            if compiler_version < "13.1":
-                # 13.1.6 maps to LLVM 13, and uses libc++. Before this concepts aren't supported.
-                raise ConanInvalidConfiguration("Apple Clang<13.1.6 is not supported")
+            # 13 is the lowest validated version, but in theory nothing below 12 will work
+            # due to compiler concepts support
+            if compiler_version < "12":
+                raise ConanInvalidConfiguration("Apple Clang<12 is not supported")
 
     @property
     def _has_std_expected(self):

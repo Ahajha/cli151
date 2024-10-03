@@ -9,7 +9,6 @@
 #include <frozen/unordered_map.h>
 
 #include <array>
-#include <concepts>
 #include <string_view>
 #include <tuple> // IWYU pragma: keep (std::get<std::tuple>)
 #include <utility>

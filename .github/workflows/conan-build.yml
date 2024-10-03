@@ -31,12 +31,12 @@ jobs:
               version: 14
               cppstd: 23
           # Linux/Clang/libc++
-          - runner: ubuntu-22.04
+          - runner: ubuntu-20.04
             arch: x86_64
             os: Linux
             compiler:
               name: clang
-              version: 13
+              version: 10
               libcxx: libc++
               cppstd: 20
           - runner: ubuntu-22.04
@@ -127,7 +127,7 @@ jobs:
       # 2 Mac configs at the same time.
       - name: Switch XCode version
         if: ${{ matrix.os == 'Macos' && matrix.compiler.version == '13.1' }}
-        run: sudo xcode-select -switch /Applications/Xcode_13.2.1.app
+        run: sudo xcode-select -switch /Applications/Xcode_13.1.app
 
       - name: Checkout repository
         uses: actions/checkout@v3
