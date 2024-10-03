@@ -1,5 +1,6 @@
 from conan import ConanFile
-from conan.tools.build import valid_min_cppstd
+from conan.errors import ConanInvalidConfiguration
+from conan.tools.build import check_min_cppstd, valid_min_cppstd
 from conan.tools.cmake import cmake_layout, CMake
 from conan.tools.microsoft import is_msvc, check_min_vs
 from conan.tools.scm import Version
@@ -8,7 +9,32 @@ class Cli151Conan(ConanFile):
     name = "cli151"
     settings = "os", "arch", "compiler", "build_type"
     generators = "CMakeDeps", "CMakeToolchain"
-    
+
+    def validate(self):
+        # check c++20 first
+        check_min_cppstd(self, "20")
+
+        compiler_version = Version(self.settings.compiler.version)
+        if is_msvc(self):
+            check_min_vs(self, "192")
+        elif self.settings.compiler == "gcc":
+            if compiler_version < "10":
+                # Requires concepts support
+                raise ConanInvalidConfiguration("GCC<10 is not supported")
+        elif self.settings.compiler == "clang":
+            if self.settings.compiler.libcxx == "libc++":
+                if compiler_version < "13":
+                    # Requires concepts support in libc++
+                    raise ConanInvalidConfiguration("Clang<13 with libc++ is not supported")
+            else:
+                if compiler_version < "10":
+                    # Requires concepts support in libstdc++, optimistically we assume this is the case.
+                    raise ConanInvalidConfiguration("Clang<10 is not supported")
+        elif self.settings.compiler == "apple-clang":
+            if compiler_version < "13.1.6":
+                # 13.1.6 maps to LLVM 13, and uses libc++. Before this concepts aren't supported.
+                raise ConanInvalidConfiguration("Apple Clang<13.1.6 is not supported")
+
     @property
     def _has_std_expected(self):
         # check c++23 first
