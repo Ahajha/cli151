@@ -87,8 +87,10 @@ consteval auto type_of_arg() -> arg_type
 template <std::size_t... Is>
 consteval auto default_name_to_index_map_data(std::index_sequence<Is...>)
 {
-	return std::array<std::pair<frozen::string, std::size_t>, sizeof...(Is)>{
-		std::pair{frozen::string{""}, Is}...,
+	// Use tuple instead of pair, workaround for
+	// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
+	return std::array<std::tuple<frozen::string, std::size_t>, sizeof...(Is)>{
+		std::tuple{frozen::string{""}, Is}...,
 	};
 }
 
@@ -107,8 +109,8 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 	// Temp hack: Seems to be some issues with 0-length data.
 	if constexpr (size == 0)
 	{
-		return std::array<std::pair<frozen::string, std::size_t>, 1>{
-			std::pair{frozen::string{""}, 0},
+		return std::array<std::tuple<frozen::string, std::size_t>, 1>{
+			std::tuple{frozen::string{""}, 0},
 		};
 	}
 	else
