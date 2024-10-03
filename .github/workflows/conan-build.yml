@@ -96,18 +96,17 @@ jobs:
               cppstd: 23
             os: Macos
             arch: armv8
-          # XCode problems - we need to be able to specify the version of XCode being used
-          #- runner: macos-13
-          #  compiler:
-          #    name: apple-clang
-          #    version: 14
-          #    cppstd: 23
-          #  os: Macos
-          #  arch: x86_64
+          - runner: macos-12
+            compiler:
+              name: apple-clang
+              version: 13.2.1
+              cppstd: 20
+            os: Macos
+            arch: x86_64
 
     steps:
       - name: Install compiler
-        if: ${{ matrix.os == 'Linux' }}
+        if: ${{ matrix.os }} == 'Linux'
         run: |
           if [ ${{ matrix.compiler.name }} == "clang" ]
           then
@@ -123,6 +122,12 @@ jobs:
           else
               sudo apt install g++-${{ matrix.compiler.version }} -y
           fi
+
+      # Step specifically for this version, probably fine since we likely won't test more than
+      # 2 Mac configs at the same time.
+      - name: Switch XCode version
+        if: ${{ matrix.os }} == 'Macos' && ${{ matrix.compiler.version }} == '13.2.1'
+        run: sudo xcode-select -switch /Applications/Xcode_13.2.1.app
 
       - name: Checkout repository
         uses: actions/checkout@v3
