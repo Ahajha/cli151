@@ -30,10 +30,7 @@ struct cli::meta<mycli>
 	};
 };
 
-auto to_string_view(frozen::string str) -> std::string_view
-{
-	return {str.data(), str.data() + str.size()};
-}
+auto to_string_view(frozen::string str) -> std::string_view { return {str.data(), str.size()}; }
 
 int main(int argc, char* argv[])
 {
