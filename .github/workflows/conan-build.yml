@@ -99,7 +99,7 @@ jobs:
           - runner: macos-12
             compiler:
               name: apple-clang
-              version: 13.2.1
+              version: 13.1
               cppstd: 20
             os: Macos
             arch: x86_64
@@ -126,7 +126,7 @@ jobs:
       # Step specifically for this version, probably fine since we likely won't test more than
       # 2 Mac configs at the same time.
       - name: Switch XCode version
-        if: ${{ matrix.os == 'Macos' }} && ${{ matrix.compiler.version == '13.2.1' }}
+        if: ${{ matrix.os == 'Macos' && matrix.compiler.version == '13.2.1' }}
         run: sudo xcode-select -switch /Applications/Xcode_13.2.1.app
 
       - name: Checkout repository

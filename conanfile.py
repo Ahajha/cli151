@@ -31,7 +31,7 @@ class Cli151Conan(ConanFile):
                     # Requires concepts support in libstdc++, optimistically we assume this is the case.
                     raise ConanInvalidConfiguration("Clang<10 is not supported")
         elif self.settings.compiler == "apple-clang":
-            if compiler_version < "13.1.6":
+            if compiler_version < "13.1":
                 # 13.1.6 maps to LLVM 13, and uses libc++. Before this concepts aren't supported.
                 raise ConanInvalidConfiguration("Apple Clang<13.1.6 is not supported")
 
