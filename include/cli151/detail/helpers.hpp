@@ -145,14 +145,15 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 
 		(adder.template operator()<Is>() && ...);
 
+#ifndef NDEBUG
 		assert(index == size);
-
 		for ([[maybe_unused]] const auto& [name, i] : data)
 		{
 			assert(name.size() > 0);
 			assert(name != default_);
 			assert(i < sizeof...(Is));
 		}
+#endif
 
 		return data;
 	}
@@ -179,12 +180,13 @@ consteval auto make_positional_args_indexes_data()
 
 	(adder.template operator()<Is>() && ...);
 
+#ifndef NDEBUG
 	assert(index == size);
-
 	for ([[maybe_unused]] const auto i : data)
 	{
 		assert(i < sizeof...(Is));
 	}
+#endif
 
 	return data;
 }
