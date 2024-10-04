@@ -36,7 +36,7 @@ jobs:
             os: Linux
             compiler:
               name: clang
-              version: 11
+              version: 10
               libcxx: libc++
               cppstd: 20
           - runner: ubuntu-22.04
