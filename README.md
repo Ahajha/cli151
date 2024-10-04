@@ -84,7 +84,10 @@ Work in progress - Future goals are to directly support FetchContent and Conan.
 
 ## Compiler support
 
-Work in progress - Check `.github/workflows/conan-build.yml` to see what configurations are tested for now. Some earlier versions of GCC and Clang should work.
+GCC 10+
+Clang 10+ (with libstdc++ or libc++)
+MSVC 2019+
+Apple clang 13+ (12 _might_ work, but is untested)
 
 ## Advanced usage
 

@@ -126,7 +126,7 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 			using info = kebabbed_name<T, I>;
 			// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
 			// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
-			// Otherwise, we could do `data[index++] = {info::name, I};
+			// Otherwise, we could do data[index++] = {info::name, I};
 			if constexpr (!info::name.empty())
 			{
 				std::get<0>(data[index]) = info::name;
