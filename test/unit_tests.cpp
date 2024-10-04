@@ -289,3 +289,22 @@ TEST_CASE("Autokebabbing of names")
 
 	CHECK(result.value().this_keyword_has_a_lot_of_underscores == 234567);
 }
+
+#include <cli151/macros.hpp>
+
+struct cli2
+{
+	std::string_view first, middle, last;
+};
+CLI151_CLI(cli2, &T::first, &T::middle, &T::last)
+
+TEST_CASE("Macro definition")
+{
+	constexpr std::array args{"main", "Francesco", "Von", "Pellegreno"};
+	const auto result = cli::parse<cli2>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().first == "Francesco");
+	CHECK(result.value().middle == "Von");
+	CHECK(result.value().last == "Pellegreno");
+}

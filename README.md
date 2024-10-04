@@ -55,6 +55,14 @@ int main(int argc, char* argv[])
 }
 ```
 
+There also exists a convenience macro in a separate header. The following is an equivalent way to define the meta information (T is automatically added as an alias to the given type):
+
+```c++
+#include <cli151/macros.hpp>
+
+CLI151_CLI(mycli, &T::number, &T::author, &T::cool_flag)
+```
+
 Pass the arguments as:
 `./program 123 --author Ahajha --cool-flag`
 - `cool_flag` is flipped when specified
