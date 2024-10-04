@@ -119,31 +119,28 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 
 		const auto adder = [&data, &index]<std::size_t I>()
 		{
-			if constexpr (type_of_arg<T, I>() != arg_type::keyword)
+			if constexpr (type_of_arg<T, I>() == arg_type::keyword)
 			{
-				return true;
+				using info = kebabbed_name<T, I>;
+				// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
+				// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
+				// Otherwise, we could do data[index++] = {info::name, I};
+				if constexpr (!info::name.empty())
+				{
+					std::get<0>(data[index]) = info::name;
+					std::get<1>(data[index]) = I;
+					index++;
+				}
+				if constexpr (!info::abbr.empty())
+				{
+					std::get<0>(data[index]) = info::abbr;
+					std::get<1>(data[index]) = I;
+					index++;
+				}
 			}
-			using info = kebabbed_name<T, I>;
-			// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
-			// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
-			// Otherwise, we could do data[index++] = {info::name, I};
-			if constexpr (!info::name.empty())
-			{
-				std::get<0>(data[index]) = info::name;
-				std::get<1>(data[index]) = I;
-				index++;
-			}
-			if constexpr (!info::abbr.empty())
-			{
-				std::get<0>(data[index]) = info::abbr;
-				std::get<1>(data[index]) = I;
-				index++;
-			}
-
-			return true;
 		};
 
-		(adder.template operator()<Is>() && ...);
+		(adder.template operator()<Is>(), ...);
 
 #ifndef NDEBUG
 		assert(index == size);
@@ -174,11 +171,9 @@ consteval auto make_positional_args_indexes_data()
 		{
 			data[index++] = I;
 		}
-
-		return true;
 	};
 
-	(adder.template operator()<Is>() && ...);
+	(adder.template operator()<Is>(), ...);
 
 #ifndef NDEBUG
 	assert(index == size);
