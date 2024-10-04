@@ -22,11 +22,11 @@ class Cli151Conan(ConanFile):
                 # Requires concepts support
                 raise ConanInvalidConfiguration("GCC<10 is not supported")
         elif self.settings.compiler == "clang":
-            if self.settings.compiler.libcxx == "libc++":
-                if compiler_version < "11":
-                    # Requires constexpr std::pair, introduced in
-                    # https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
-                    raise ConanInvalidConfiguration("Clang<11 with libc++ is not supported")
+#            if self.settings.compiler.libcxx == "libc++":
+#                if compiler_version < "11":
+#                    # Requires constexpr std::pair, introduced in
+#                    # https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
+#                    raise ConanInvalidConfiguration("Clang<11 with libc++ is not supported")
             if compiler_version < "10":
                 # Requires concepts support
                 raise ConanInvalidConfiguration("Clang<10 is not supported")
