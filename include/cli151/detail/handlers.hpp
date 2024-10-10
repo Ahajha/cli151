@@ -48,7 +48,7 @@ inline auto parse_value(std::string_view& out, const int argc, const char* const
 	-> expected<void>
 {
 	return get_next_value(argc, argv, current_value, current_index)
-	    .map([&out](std::string_view result) { out = result; });
+	    .transform([&out](std::string_view result) { out = result; });
 }
 
 inline auto parse_value(const char*& out, const int argc, const char* const* argv,
@@ -56,7 +56,7 @@ inline auto parse_value(const char*& out, const int argc, const char* const* arg
 	-> expected<void>
 {
 	return get_next_value(argc, argv, current_value, current_index)
-	    .map([&out](std::string_view result) { out = result.data(); });
+	    .transform([&out](std::string_view result) { out = result.data(); });
 }
 
 template <class T>
