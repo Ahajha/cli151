@@ -11,6 +11,27 @@
 namespace cli151::detail
 {
 
+inline auto get_next_value(const int argc, const char* const* argv,
+                           std::optional<std::string_view> current_value, int& current_index)
+	-> expected<std::string_view>
+{
+	if (current_value.has_value())
+	{
+		return current_value.value();
+	}
+	else if (current_index >= argc)
+	{
+		return compat::unexpected(error{
+			.type = error_type::missing_args,
+			.arg_index = current_index,
+		});
+	}
+	else
+	{
+		return argv[current_index++];
+	}
+}
+
 /*
 parse_value(out, argc, argv, current_value, current_index) -> expected
 out: If successful, the result is placed here. On error, no change.
@@ -26,44 +47,16 @@ inline auto parse_value(std::string_view& out, const int argc, const char* const
                         std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
-	if (current_value.has_value())
-	{
-		out = current_value.value();
-	}
-	else if (current_index >= argc)
-	{
-		return compat::unexpected(error{
-			.type = error_type::missing_args,
-			.arg_index = current_index,
-		});
-	}
-	else
-	{
-		out = argv[current_index++];
-	}
-	return {};
+	return get_next_value(argc, argv, current_value, current_index)
+	    .map([&out](std::string_view result) { out = result; });
 }
 
 inline auto parse_value(const char*& out, const int argc, const char* const* argv,
                         std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
-	if (current_value.has_value())
-	{
-		out = current_value.value().data();
-	}
-	else if (current_index >= argc)
-	{
-		return compat::unexpected(error{
-			.type = error_type::missing_args,
-			.arg_index = current_index,
-		});
-	}
-	else
-	{
-		out = argv[current_index++];
-	}
-	return {};
+	return get_next_value(argc, argv, current_value, current_index)
+	    .map([&out](std::string_view result) { out = result.data(); });
 }
 
 template <class T>
@@ -72,34 +65,23 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
                         std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
-	std::string_view view;
-	if (current_value.has_value())
-	{
-		view = current_value.value();
-	}
-	else if (current_index >= argc)
-	{
-		return compat::unexpected(error{
-			.type = error_type::missing_args,
-			.arg_index = current_index,
-		});
-	}
-	else
-	{
-		view = argv[current_index++];
-	}
+	return get_next_value(argc, argv, current_value, current_index)
+	    .and_then(
+			[&out, &current_index](std::string_view result) -> expected<void>
+			{
+				const auto [ptr, ec] =
+					compat::from_chars(result.data(), result.data() + result.size(), out);
 
-	const auto [ptr, ec] = compat::from_chars(view.data(), view.data() + view.size(), out);
+				if (ec != std::errc{})
+				{
+					return compat::unexpected(error{
+						.type = error_type::invalid_number,
+						.arg_index = current_index,
+					});
+				}
 
-	if (ec != std::errc{})
-	{
-		return compat::unexpected(error{
-			.type = error_type::invalid_number,
-			.arg_index = current_index,
-		});
-	}
-
-	return {};
+				return {};
+			});
 }
 
 template <class T>
