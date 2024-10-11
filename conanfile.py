@@ -44,11 +44,15 @@ class Cli151Conan(ConanFile):
             return compiler_version >= "12"
         elif self.settings.compiler == "clang":
             if self.settings.compiler.libcxx == "libc++":
-                return compiler_version >= "16"
+                # std::expected added in libc++16, monadic operations in libc++17
+                return compiler_version >= "17"
             else:
-                # https://github.com/llvm/llvm-project/issues/62801
+                # If clang < 19, definitely no.
+                # See https://github.com/llvm/llvm-project/issues/62801
                 # __cpp_concepts == 202002 in clang 19
-                return compiler_version >= "19"
+                # Otherwise, we depend on the installed libstdc++ version,
+                # which is difficult to model in Conan, so just assume no.
+                return False
         elif self.settings.compiler == "apple-clang":
             return compiler_version >= "15"
 
