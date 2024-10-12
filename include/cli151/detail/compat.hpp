@@ -29,7 +29,7 @@ using std::unexpected;
 #if !__has_include(<charconv>)
 #	define CLI151_HAS_FROM_CHARS false
 #else
-#	include <charconv>
+#	include <charconv> // IWYU pragma: keep (need charconv for __cpp_lib_to_chars)
 #	if !defined __cpp_lib_to_chars
 #		define CLI151_HAS_FROM_CHARS false
 #	endif
