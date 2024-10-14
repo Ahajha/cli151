@@ -17,7 +17,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 	using dispatcher = detail::handler_dispatcher<T>;
 
-	std::array<bool, dispatcher::index_to_handler_map.size()> used{};
+	// std::array<bool, dispatcher::index_to_handler_map.size()> used{};
 
 	// High level overview:
 	// - Figure out if this is positional or keyword
@@ -33,48 +33,39 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 	while (arg_index < argc)
 	{
 		const std::string_view view = argv[arg_index];
-		if (view.at(0) == '-')
+
+		if (view.starts_with("--"))
 		{
-			// Either a long or short form
-			// TODO: For now this allows any number of dashes before, this doesn't hurt too much but
-			// is something we will want to revisit.
-			const auto nodashes = view.substr(view.find_first_not_of('-'));
+			// Long form
 
-			// In case this is a key + value, parse out delimiters
-			const auto delimiter_pos = nodashes.find_first_of(":=");
-			const auto key = nodashes.substr(0, delimiter_pos);
+			const auto handler_result =
+				detail::parse_long_keyword<T>(view, arg_index)
+					.and_then(
+						[&](const auto& parse_result)
+						{
+							const auto [handler_index, value] = parse_result;
+							const auto handler = dispatcher::index_to_handler_map[handler_index];
+							return handler(result, argc, argv, value, arg_index);
+						});
 
-			const auto handler_index = dispatcher::name_to_index_map.find(key);
-
-			if (handler_index == dispatcher::name_to_index_map.end())
+			if (!handler_result)
 			{
-				return compat::unexpected(error{
-					.type = error_type::invalid_key,
-					.arg_index = arg_index,
-				});
+				return compat::unexpected(handler_result.error());
 			}
+		}
+		else if (view.starts_with('-'))
+		{
+			// Short form
 
-			const auto value = delimiter_pos == std::string_view::npos
-			                       ? std::optional<std::string_view>{}
-			                       : nodashes.substr(delimiter_pos + 1);
-
-			++arg_index;
-
-			// TODO: This code is (nearly) identical in both branches
-			const auto handler = dispatcher::index_to_handler_map[handler_index->second];
-
-			// TODO: "increasing" args, such as -vvv for extra verbosity,
-			// or sets/maps like -DCMAKE_SOMEVAR=somevalue in CMake.
-			if (used[handler_index->second])
-			{
-				return compat::unexpected(error{
-					.type = error_type::duplicate_arg,
-					.arg_index = arg_index,
-				});
-			}
-			used[handler_index->second] = true;
-
-			const auto handler_result = handler(result, argc, argv, value, arg_index);
+			const auto handler_result =
+				detail::parse_short_keyword<T>(view, arg_index)
+					.and_then(
+						[&](const auto& parse_result)
+						{
+							const auto [handler_index, value] = parse_result;
+							const auto handler = dispatcher::index_to_handler_map[handler_index];
+							return handler(result, argc, argv, value, arg_index);
+						});
 
 			if (!handler_result)
 			{
@@ -107,6 +98,19 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 				return compat::unexpected(handler_result.error());
 			}
 		}
+
+		// TODO: "increasing" args, such as -vvv for extra verbosity,
+		// or sets/maps like -DCMAKE_SOMEVAR=somevalue in CMake.
+		/*
+		if (used[handler_index->second])
+		{
+		    return compat::unexpected(error{
+		        .type = error_type::duplicate_arg,
+		        .arg_index = arg_index,
+		    });
+		}
+		used[handler_index->second] = true;
+		*/
 	}
 
 	return result;

@@ -93,16 +93,11 @@ consteval auto default_name_to_index_map_data(std::index_sequence<Is...>)
 }
 
 template <class T, std::size_t... Is>
-consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
+consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 {
-	constexpr auto n_long_names =
+	constexpr auto size =
 		((!kebabbed_name<T, Is>::name.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
 	     0);
-	constexpr auto n_short_names =
-		((!kebabbed_name<T, Is>::abbr.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
-	     0);
-
-	constexpr auto size = n_long_names + n_short_names;
 
 	// Temp hack: Seems to be some issues with 0-length data.
 	if constexpr (size == 0)
@@ -119,24 +114,65 @@ consteval auto make_name_to_index_map_data(std::index_sequence<Is...>)
 
 		const auto adder = [&data, &index]<std::size_t I>()
 		{
-			if constexpr (type_of_arg<T, I>() == arg_type::keyword)
+			using info = kebabbed_name<T, I>;
+			// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
+			// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
+			// Otherwise, we could do data[index++] = {info::name, I};
+			if constexpr (!info::name.empty() && type_of_arg<T, I>() == arg_type::keyword)
 			{
-				using info = kebabbed_name<T, I>;
-				// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
-				// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
-				// Otherwise, we could do data[index++] = {info::name, I};
-				if constexpr (!info::name.empty())
-				{
-					std::get<0>(data[index]) = info::name;
-					std::get<1>(data[index]) = I;
-					index++;
-				}
-				if constexpr (!info::abbr.empty())
-				{
-					std::get<0>(data[index]) = info::abbr;
-					std::get<1>(data[index]) = I;
-					index++;
-				}
+				std::get<0>(data[index]) = info::name;
+				std::get<1>(data[index]) = I;
+				index++;
+			}
+		};
+
+		(adder.template operator()<Is>(), ...);
+
+#ifndef NDEBUG
+		assert(index == size);
+		for ([[maybe_unused]] const auto& [name, i] : data)
+		{
+			assert(name.size() > 0);
+			assert(name != default_);
+			assert(i < sizeof...(Is));
+		}
+#endif
+
+		return data;
+	}
+}
+
+template <class T, std::size_t... Is>
+consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
+{
+	constexpr auto size =
+		((!kebabbed_name<T, Is>::abbr.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
+	     0);
+
+	// Temp hack: Seems to be some issues with 0-length data.
+	if constexpr (size == 0)
+	{
+		return std::array<std::pair<frozen::string, std::size_t>, 1>{
+			std::pair{frozen::string{""}, 0},
+		};
+	}
+	else
+	{
+		auto data = default_name_to_index_map_data(std::make_index_sequence<size>());
+
+		std::size_t index = 0;
+
+		const auto adder = [&data, &index]<std::size_t I>()
+		{
+			using info = kebabbed_name<T, I>;
+			// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
+			// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
+			// Otherwise, we could do data[index++] = {info::abbr, I};
+			if constexpr (!info::abbr.empty() && type_of_arg<T, I>() == arg_type::keyword)
+			{
+				std::get<0>(data[index]) = info::abbr;
+				std::get<1>(data[index]) = I;
+				index++;
 			}
 		};
 
@@ -201,9 +237,11 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 	// ones which are not specified. Maybe a helper that computes the data? Counting the number
 	// of names is cheap.
 
-	// Maps long and short names of keyword arguments to the index in the handler map of their
-	constexpr static auto name_to_index_map = frozen::make_unordered_map(
-		make_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
+	// Maps long and short names of keyword arguments to the index in index_to_handler_map.
+	constexpr static auto long_name_to_index_map = frozen::make_unordered_map(
+		make_long_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
+	constexpr static auto short_name_to_index_map = frozen::make_unordered_map(
+		make_short_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
 
 	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
 		parse_value_into_struct<T, std::get<Is>(meta<T>::value.args_).memptr>...,
@@ -221,5 +259,65 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 template <class T>
 using handler_dispatcher =
 	handler_dispatcher_impl<T, std::make_index_sequence<cli151::meta<T>::value.n_args>>;
+
+template <class T>
+auto parse_long_keyword(const std::string_view view, int& arg_index)
+	-> expected<std::pair<std::size_t, std::optional<std::string_view>>>
+{
+	using dispatcher = detail::handler_dispatcher<T>;
+
+	const auto nodashes = view.substr(2);
+
+	// In case this is a key + value, parse out delimiters
+	const auto delimiter_pos = nodashes.find_first_of(":= ");
+	const auto key = nodashes.substr(0, delimiter_pos);
+
+	const auto handler_index = dispatcher::long_name_to_index_map.find(key);
+
+	if (handler_index == dispatcher::long_name_to_index_map.end())
+	{
+		return compat::unexpected(error{
+			.type = error_type::invalid_key,
+			.arg_index = arg_index,
+		});
+	}
+
+	const auto value = delimiter_pos == std::string_view::npos ? std::optional<std::string_view>{}
+	                                                           : nodashes.substr(delimiter_pos + 1);
+
+	++arg_index;
+
+	return std::pair{handler_index->second, value};
+}
+
+template <class T>
+auto parse_short_keyword(const std::string_view view, int& arg_index)
+	-> expected<std::pair<std::size_t, std::optional<std::string_view>>>
+{
+	using dispatcher = detail::handler_dispatcher<T>;
+
+	const auto nodashes = view.substr(1);
+
+	// In case this is a key + value, parse out delimiters
+	const auto delimiter_pos = nodashes.find_first_of(":= ");
+	const auto key = nodashes.substr(0, delimiter_pos);
+
+	const auto handler_index = dispatcher::short_name_to_index_map.find(key);
+
+	if (handler_index == dispatcher::short_name_to_index_map.end())
+	{
+		return compat::unexpected(error{
+			.type = error_type::invalid_key,
+			.arg_index = arg_index,
+		});
+	}
+
+	const auto value = delimiter_pos == std::string_view::npos ? std::optional<std::string_view>{}
+	                                                           : nodashes.substr(delimiter_pos + 1);
+
+	++arg_index;
+
+	return std::pair{handler_index->second, value};
+}
 
 } // namespace cli151::detail

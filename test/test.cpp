@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 	static_assert(cli::detail::type_of_arg<mycli, 2>() == cli::arg_type::keyword);
 	static_assert(cli::detail::type_of_arg<mycli, 3>() == cli::arg_type::keyword);
 
-	for (const auto& [key, value] : cli::detail::handler_dispatcher<mycli>::name_to_index_map)
+	for (const auto& [key, value] : cli::detail::handler_dispatcher<mycli>::long_name_to_index_map)
 	{
 		std::cout << "Key: " << to_string_view(key) << ", Value: " << value << '\n';
 	}
