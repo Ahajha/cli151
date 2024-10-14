@@ -1,14 +1,11 @@
 #pragma once
 
-// https://github.com/llvm/llvm-project/issues/62801
-// We want <expected> and C++23, unless we're on clang < 19 with libstdc++
+// Also check for monadic operations support
 #if !__has_include(<expected>)
 #	define CLI151_HAS_STD_EXPECTED false
 #else
 #	include <expected>
-#	if !defined __cpp_lib_expected
-#		define CLI151_HAS_STD_EXPECTED false
-#	elif defined __clang__ && defined __GLIBCXX__ && __clang_major__ < 19
+#	if !defined __cpp_lib_expected || __cpp_lib_expected < 202211L
 #		define CLI151_HAS_STD_EXPECTED false
 #	endif
 #endif
@@ -32,10 +29,8 @@ using std::unexpected;
 #if !__has_include(<charconv>)
 #	define CLI151_HAS_FROM_CHARS false
 #else
-#	include <charconv>
+#	include <charconv> // IWYU pragma: keep (need charconv for __cpp_lib_to_chars)
 #	if !defined __cpp_lib_to_chars
-#		define CLI151_HAS_FROM_CHARS false
-#	elif defined __clang__ && defined __GLIBCXX__ && __clang_major__ < 19
 #		define CLI151_HAS_FROM_CHARS false
 #	endif
 #endif
