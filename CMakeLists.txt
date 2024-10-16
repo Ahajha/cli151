@@ -5,7 +5,7 @@ if (MSVC)
     # Enable conforming __cplusplus macro
     add_compile_options(/W4 /Zc:__cplusplus)
 else()
-    add_compile_options(-Wall -Wextra -Wconversion -Wshadow)
+    add_compile_options(-Wall -Wextra -Wconversion -Wshadow -fno-exceptions)
 endif()
 
 find_package(frozen REQUIRED)
