@@ -223,7 +223,7 @@ consteval auto make_positional_args_indexes_data()
 }
 
 template <class T>
-using handler_t = auto(*)(T&, int, const char* const*, std::optional<std::string_view>, int&)
+using handler_t = auto(*)(T&, int, const char* const*, std::optional<std::string_view>, int&, bool&)
                       -> expected<void>;
 
 template <class T, class Seq>
@@ -244,7 +244,7 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 		make_short_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
 
 	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
-		parse_value_into_struct<T, std::get<Is>(meta<T>::value.args_).memptr>...,
+		parse_value_into_struct<T, Is>...,
 	};
 
 	// Indexes of all the positional arguments in the order they appear.

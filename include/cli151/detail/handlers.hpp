@@ -108,12 +108,33 @@ inline auto parse_value(bool& out, [[maybe_unused]] const int argc,
 	return {};
 }
 
-template <class T, auto Memptr>
-auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
-                             std::optional<std::string_view> current_value, int& current_index)
-	-> expected<void>
+template <class T, std::size_t N>
+consteval auto is_single_use_arg() -> bool
 {
-	return parse_value(out.*Memptr, argc, argv, current_value, current_index);
+	// For now
+	return true;
+}
+
+template <class T, std::size_t I>
+auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
+                             std::optional<std::string_view> current_value, int& current_index,
+                             bool& used) -> expected<void>
+{
+	constexpr auto memptr = std::get<I>(meta<T>::value.args_).memptr;
+
+	if constexpr (is_single_use_arg<T, I>())
+	{
+		if (used)
+		{
+			return compat::unexpected(error{
+				.type = error_type::duplicate_arg,
+				.arg_index = current_index,
+			});
+		}
+		used = true;
+	}
+
+	return parse_value(out.*memptr, argc, argv, current_value, current_index);
 }
 
 } // namespace cli151::detail

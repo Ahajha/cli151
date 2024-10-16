@@ -17,7 +17,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 
 	using dispatcher = detail::handler_dispatcher<T>;
 
-	// std::array<bool, dispatcher::index_to_handler_map.size()> used{};
+	std::array<bool, dispatcher::index_to_handler_map.size()> used{};
 
 	// High level overview:
 	// - Figure out if this is positional or keyword
@@ -45,7 +45,8 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 						{
 							const auto [handler_index, value] = parse_result;
 							const auto handler = dispatcher::index_to_handler_map[handler_index];
-							return handler(result, argc, argv, value, arg_index);
+							return handler(result, argc, argv, value, arg_index,
+				                           used[handler_index]);
 						});
 
 			if (!handler_result)
@@ -64,7 +65,8 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 						{
 							const auto [handler_index, value] = parse_result;
 							const auto handler = dispatcher::index_to_handler_map[handler_index];
-							return handler(result, argc, argv, value, arg_index);
+							return handler(result, argc, argv, value, arg_index,
+				                           used[handler_index]);
 						});
 
 			if (!handler_result)
@@ -91,26 +93,14 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			// TODO: This code is (nearly) identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index];
 
-			const auto handler_result = handler(result, argc, argv, {}, arg_index);
+			const auto handler_result =
+				handler(result, argc, argv, {}, arg_index, used[handler_index]);
 
 			if (!handler_result)
 			{
 				return compat::unexpected(handler_result.error());
 			}
 		}
-
-		// TODO: "increasing" args, such as -vvv for extra verbosity,
-		// or sets/maps like -DCMAKE_SOMEVAR=somevalue in CMake.
-		/*
-		if (used[handler_index->second])
-		{
-		    return compat::unexpected(error{
-		        .type = error_type::duplicate_arg,
-		        .arg_index = arg_index,
-		    });
-		}
-		used[handler_index->second] = true;
-		*/
 	}
 
 	return result;
