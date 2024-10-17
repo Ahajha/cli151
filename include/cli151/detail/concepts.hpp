@@ -25,4 +25,7 @@ struct pointer_to_member<M C::*>
 	using member = M;
 };
 
+template <class T>
+concept set_like = requires(T t, typename T::value_type e) { t.insert(e); };
+
 } // namespace cli151::detail

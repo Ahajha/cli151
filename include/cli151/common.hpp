@@ -48,8 +48,8 @@ enum class arg_type
 	// The argument is determined by keyword (short or long), and is optional
 	keyword,
 	// Have the library guess. With no other information, the first argument passed in that is
-	// either a std::optional or a bool is a keyword argument. Any arguments before that are
-	// positional, and any after are also keywords.
+	// either a std::optional, a bool, or std::set-like is a keyword argument. Any arguments before
+	// that are positional, and any after are also keywords.
 	// TODO: For the first draft, just try to get this guessing working. Guesses mixed with
 	// explicit arg types might be tricky.
 	guess,

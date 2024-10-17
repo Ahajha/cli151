@@ -5,7 +5,9 @@ namespace cli = cli151;
 #include <doctest/doctest.h>
 
 #include <cstdint>
+#include <set>
 #include <string_view>
+#include <unordered_set>
 
 // For now, error tests only check that the parse failed. These tests should be extended once the
 // error interface is more stable.
@@ -288,6 +290,66 @@ TEST_CASE("Autokebabbing of names")
 	REQUIRE(result);
 
 	CHECK(result.value().this_keyword_has_a_lot_of_underscores == 234567);
+}
+
+struct sets
+{
+	std::set<int> ints;
+	std::set<std::string_view> strs;
+};
+template <>
+struct cli::meta<sets>
+{
+	using T = sets;
+	constexpr static auto value = args{&T::ints, &T::strs};
+};
+
+TEST_CASE("std::set")
+{
+	constexpr std::array args{"main", "--ints", "123", "-s",     "hello",     "--ints",
+	                          "456",  "-i",     "789", "-i=234", "--ints=234"};
+	const auto result = cli::parse<sets>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().ints == std::set<int>{123, 456, 789, 234});
+	CHECK(result.value().strs == std::set<std::string_view>{"hello"});
+}
+
+TEST_CASE("std::set (failure)")
+{
+	constexpr std::array args{"main", "--ints", "notanint"};
+	const auto result = cli::parse<sets>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+struct unordered_sets
+{
+	std::unordered_set<int> ints;
+	std::unordered_set<std::string_view> strs;
+};
+template <>
+struct cli::meta<unordered_sets>
+{
+	using T = unordered_sets;
+	constexpr static auto value = args{&T::ints, &T::strs};
+};
+
+TEST_CASE("std::unordered_set")
+{
+	constexpr std::array args{"main", "--ints", "123", "-s",     "hello",     "--ints",
+	                          "456",  "-i",     "789", "-i=234", "--ints=234"};
+	const auto result = cli::parse<unordered_sets>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().ints == std::unordered_set<int>{123, 456, 789, 234});
+	CHECK(result.value().strs == std::unordered_set<std::string_view>{"hello"});
+}
+
+TEST_CASE("std::unordered_set (failure)")
+{
+	constexpr std::array args{"main", "--ints", "notanint"};
+	const auto result = cli::parse<unordered_sets>(args.size(), args.data());
+	REQUIRE(!result);
 }
 
 #include <cli151/macros.hpp>

@@ -99,6 +99,21 @@ inline auto parse_value(std::optional<T>& out, const int argc, const char* const
 	return parse_result;
 }
 
+template <set_like T>
+auto parse_value(T& out, const int argc, const char* const* argv,
+                 std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
+{
+	typename T::value_type to_insert;
+	const auto parse_result = parse_value(to_insert, argc, argv, current_value, current_index);
+	if (parse_result)
+	{
+		out.insert(std::move(to_insert));
+	}
+
+	return parse_result;
+}
+
 inline auto parse_value(bool& out, [[maybe_unused]] const int argc,
                         [[maybe_unused]] const char* const* argv,
                         [[maybe_unused]] std::optional<std::string_view> current_value,
@@ -111,8 +126,9 @@ inline auto parse_value(bool& out, [[maybe_unused]] const int argc,
 template <class T, std::size_t N>
 consteval auto is_single_use_arg() -> bool
 {
-	// For now
-	return true;
+	using M =
+		typename pointer_to_member<decltype(std::get<N>(meta<T>::value.args_).memptr)>::member;
+	return !set_like<M>;
 }
 
 template <class T, std::size_t I>
