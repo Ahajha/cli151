@@ -4,10 +4,13 @@ namespace cli = cli151;
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <doctest/doctest.h>
 
+#include <array>
 #include <cstdint>
 #include <set>
 #include <string_view>
+#include <tuple>
 #include <unordered_set>
+#include <utility>
 
 // For now, error tests only check that the parse failed. These tests should be extended once the
 // error interface is more stable.
@@ -350,6 +353,86 @@ TEST_CASE("std::unordered_set (failure)")
 	constexpr std::array args{"main", "--ints", "notanint"};
 	const auto result = cli::parse<unordered_sets>(args.size(), args.data());
 	REQUIRE(!result);
+}
+
+struct pairs
+{
+	std::pair<int, std::string_view> first;
+	std::optional<std::pair<int, double>> second;
+};
+template <>
+struct cli::meta<pairs>
+{
+	using T = pairs;
+	constexpr static auto value = args{&T::first, &T::second};
+};
+
+TEST_CASE("std::pair")
+{
+	constexpr std::array args{"main", "123", "hello", "--second", "456", "34.5"};
+	const auto result = cli::parse<pairs>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().first.first == 123);
+	CHECK(result.value().first.second == "hello");
+	CHECK(result.value().second.value().first == 456);
+	CHECK(result.value().second.value().second == 34.5);
+}
+
+TEST_CASE("std::pair (failure, not enough elements)")
+{
+	constexpr std::array args{"main", "123"};
+	const auto result = cli::parse<pairs>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+TEST_CASE("std::pair (failure, parse failure of element)")
+{
+	constexpr std::array args{"main", "hello", "world"};
+	const auto result = cli::parse<pairs>(args.size(), args.data());
+	REQUIRE(!result);
+}
+
+struct tuples
+{
+	std::optional<std::tuple<int, std::string_view, double>> value;
+};
+template <>
+struct cli::meta<tuples>
+{
+	using T = tuples;
+	constexpr static auto value = args{&T::value};
+};
+
+TEST_CASE("std::tuple")
+{
+	constexpr std::array args{"main", "--value", "123", "hello", "34.5"};
+	const auto result = cli::parse<tuples>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(std::get<0>(result.value().value.value()) == 123);
+	CHECK(std::get<1>(result.value().value.value()) == "hello");
+	CHECK(std::get<2>(result.value().value.value()) == 34.5);
+}
+
+struct arrays
+{
+	std::array<int, 5> values;
+};
+template <>
+struct cli::meta<arrays>
+{
+	using T = arrays;
+	constexpr static auto value = args{&T::values};
+};
+
+TEST_CASE("std::array")
+{
+	constexpr std::array args{"main", "10", "20", "30", "40", "50"};
+	const auto result = cli::parse<arrays>(args.size(), args.data());
+	REQUIRE(result);
+
+	CHECK(result.value().values == std::array<int, 5>{10, 20, 30, 40, 50});
 }
 
 #include <cli151/macros.hpp>

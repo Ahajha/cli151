@@ -4,9 +4,12 @@
 #include <cli151/detail/compat.hpp>
 #include <cli151/detail/concepts.hpp>
 
+#include <array>
 #include <cassert>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace cli151::detail
 {
@@ -82,6 +85,73 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
 
 				return {};
 			});
+}
+
+// pair / tuple / array
+template <class T, std::size_t... Is>
+auto parse_tuple_like_impl(T& out, const int argc, const char* const* argv,
+                           std::optional<std::string_view> current_value, int& current_index,
+                           std::index_sequence<Is...>) -> expected<void>
+{
+	constexpr auto n_elements = sizeof...(Is);
+	static_assert(n_elements > 0, "Requires non-empty pair/tuple/array");
+
+	expected<void> result;
+	const auto parser = [&]<std::size_t I>()
+	{
+		if constexpr (I == 0)
+		{
+			const auto res =
+				parse_value(std::get<I>(out), argc, argv, current_value, current_index);
+			if (!res)
+			{
+				result = res;
+				return false;
+			}
+		}
+		else
+		{
+			const auto res = parse_value(std::get<I>(out), argc, argv, {}, current_index);
+			if (!res)
+			{
+				result = res;
+				return false;
+			}
+		}
+
+		return true;
+	};
+
+	(parser.template operator()<Is>() && ...);
+
+	return result;
+}
+
+template <class... Ts>
+auto parse_value(std::tuple<Ts...>& out, const int argc, const char* const* argv,
+                 std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
+{
+	return parse_tuple_like_impl(out, argc, argv, current_value, current_index,
+	                             std::make_index_sequence<sizeof...(Ts)>());
+}
+
+template <class T, class U>
+auto parse_value(std::pair<T, U>& out, const int argc, const char* const* argv,
+                 std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
+{
+	return parse_tuple_like_impl(out, argc, argv, current_value, current_index,
+	                             std::make_index_sequence<2>());
+}
+
+template <class T, std::size_t N>
+auto parse_value(std::array<T, N>& out, const int argc, const char* const* argv,
+                 std::optional<std::string_view> current_value, int& current_index)
+	-> expected<void>
+{
+	return parse_tuple_like_impl(out, argc, argv, current_value, current_index,
+	                             std::make_index_sequence<N>());
 }
 
 template <class T>
