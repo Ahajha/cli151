@@ -105,12 +105,6 @@ jobs:
             arch: x86_64
 
     steps:
-      # Silence deprecated Node.js warnings
-      - name: Update Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Install compiler
         if: ${{ matrix.os == 'Linux' }}
         run: |
@@ -136,7 +130,7 @@ jobs:
         run: sudo xcode-select -switch /Applications/Xcode_13.1.app
 
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Conan
         run: |
