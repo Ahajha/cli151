@@ -97,29 +97,18 @@ auto parse_tuple_like_impl(T& out, const int argc, const char* const* argv,
 	static_assert(n_elements > 0, "Requires non-empty pair/tuple/array");
 
 	expected<void> result;
-	const auto parser = [&]<std::size_t I>()
+	const auto parser = [&]<std::size_t I>() -> bool
 	{
 		if constexpr (I == 0)
 		{
-			const auto res =
-				parse_value(std::get<I>(out), argc, argv, current_value, current_index);
-			if (!res)
-			{
-				result = res;
-				return false;
-			}
+			result = parse_value(std::get<I>(out), argc, argv, current_value, current_index);
 		}
 		else
 		{
-			const auto res = parse_value(std::get<I>(out), argc, argv, {}, current_index);
-			if (!res)
-			{
-				result = res;
-				return false;
-			}
+			result = parse_value(std::get<I>(out), argc, argv, {}, current_index);
 		}
 
-		return true;
+		return result.has_value();
 	};
 
 	(parser.template operator()<Is>() && ...);
