@@ -107,7 +107,7 @@ jobs:
     steps:
       # Silence deprecated Node.js warnings
       - name: Update Node.js
-      - uses: actions/setup-node@v4
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
