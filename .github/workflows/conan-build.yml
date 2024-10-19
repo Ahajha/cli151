@@ -105,6 +105,12 @@ jobs:
             arch: x86_64
 
     steps:
+      # Silence deprecated Node.js warnings
+      - name: Update Node.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Install compiler
         if: ${{ matrix.os == 'Linux' }}
         run: |
