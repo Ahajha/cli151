@@ -94,32 +94,21 @@ auto parse_tuple_like_impl(T& out, const int argc, const char* const* argv,
                            std::index_sequence<Is...>) -> expected<void>
 {
 	constexpr auto n_elements = sizeof...(Is);
-	static_assert(n_elements > 0, "Requires non-empty pair/tuple/array");
+	static_assert(n_elements > 0, "Requires non-empty pair/tuple");
 
 	expected<void> result;
-	const auto parser = [&]<std::size_t I>()
+	const auto parser = [&]<std::size_t I>() -> bool
 	{
 		if constexpr (I == 0)
 		{
-			const auto res =
-				parse_value(std::get<I>(out), argc, argv, current_value, current_index);
-			if (!res)
-			{
-				result = res;
-				return false;
-			}
+			result = parse_value(std::get<I>(out), argc, argv, current_value, current_index);
 		}
 		else
 		{
-			const auto res = parse_value(std::get<I>(out), argc, argv, {}, current_index);
-			if (!res)
-			{
-				result = res;
-				return false;
-			}
+			result = parse_value(std::get<I>(out), argc, argv, {}, current_index);
 		}
 
-		return true;
+		return result.has_value();
 	};
 
 	(parser.template operator()<Is>() && ...);
@@ -150,8 +139,26 @@ auto parse_value(std::array<T, N>& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
-	return parse_tuple_like_impl(out, argc, argv, current_value, current_index,
-	                             std::make_index_sequence<N>());
+	static_assert(N > 0, "Requires non-empty array");
+
+	{
+		const auto result = parse_value(out[0], argc, argv, current_value, current_index);
+		if (!result)
+		{
+			return result;
+		}
+	}
+
+	for (std::size_t i = 1; i < N; ++i)
+	{
+		const auto result = parse_value(out[i], argc, argv, {}, current_index);
+		if (!result)
+		{
+			return result;
+		}
+	}
+
+	return {};
 }
 
 template <class T>
