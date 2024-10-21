@@ -86,6 +86,29 @@ class Cli151Conan(ConanFile):
         # Otherwise, play it safe and assume we don't have it.
         return False
 
+    @property
+    def _has_std_print(self):
+        # check c++23 first
+        if not valid_min_cppstd(self, "23"):
+            return False
+
+        compiler_version = Version(self.settings.compiler.version)
+        if is_msvc(self):
+            return check_min_vs(self, "193", raise_invalid=False)
+        elif self.settings.compiler == "gcc":
+            return compiler_version >= "14"
+        elif self.settings.compiler == "clang":
+            if self.settings.compiler.libcxx == "libc++":
+                return compiler_version >= "18"
+            else:
+                # Needs libstdc++14, assume no.
+                return False
+        elif self.settings.compiler == "apple-clang":
+            return compiler_version >= "15"
+
+        # Otherwise, play it safe and assume we don't have them.
+        return False
+
     def requirements(self):
         self.requires("frozen/1.2.0")
 
@@ -93,6 +116,8 @@ class Cli151Conan(ConanFile):
             self.requires("tl-expected/1.1.0")
         if not self._has_std_from_chars:
             self.requires("fast_float/6.1.5")
+        if not self._has_std_print:
+            self.requires("fmt/11.0.2")
 
         self.test_requires("doctest/2.4.11")
 

@@ -12,6 +12,7 @@ find_package(frozen REQUIRED)
 
 include(cmake/expected.cmake)
 include(cmake/from_chars.cmake)
+include(cmake/print.cmake)
 
 add_library(cli151 INTERFACE)
 target_include_directories(cli151 INTERFACE include)
