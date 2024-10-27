@@ -26,7 +26,7 @@ inline auto get_next_value(const int argc, const char* const* argv,
 	{
 		return compat::unexpected(error{
 			.type = error_type::missing_args,
-			.arg_index = current_index,
+			.arg_index = --current_index,
 		});
 	}
 	else
@@ -228,7 +228,7 @@ auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
 		{
 			return compat::unexpected(error{
 				.type = error_type::duplicate_arg,
-				.arg_index = current_index,
+				.arg_index = --current_index,
 			});
 		}
 		used = true;
