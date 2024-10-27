@@ -1,5 +1,6 @@
 #include <cli151/cli151.hpp>
 #include <cli151/detail/reflect.hpp>
+#include <cli151/formatters/error/format.hpp>
 
 #include <iostream>
 #include <optional>
@@ -32,30 +33,32 @@ struct cli::meta<mycli>
 
 auto to_string_view(frozen::string str) -> std::string_view { return {str.data(), str.size()}; }
 
-int main(int argc, char* argv[])
+auto parse_and_print_results(const int argc, const char* const* argv) -> void
 {
-	[[maybe_unused]] auto result1 = cli::parse<mycli>(argc, argv);
+	auto result = cli::parse<mycli>(argc, argv);
 
-	constexpr std::array args{"main", "123",      "--other-number", "456",
-	                          "bob",  "--author", "steve",          "--flag"};
-	auto result2 = cli::parse<mycli>(args.size(), args.data());
-
-	if (!result2)
+	if (!result)
 	{
-		std::cerr << "Error!\n";
-		// TODO: Formatter or magic_enum maybe
-		std::cerr << "Error type = " << static_cast<int>(result2.error().type) << '\n';
-		std::cerr << "Error index = " << result2.error().arg_index << '\n';
+		cli::compat::println("Error: {}", result.error().formatter(argc, argv));
 	}
 	else
 	{
-		const auto& out = result2.value();
+		const auto& out = result.value();
 		std::cout << "number: " << out.number << '\n';
 		std::cout << "name: " << out.name << '\n';
 		std::cout << "author: " << out.author.value_or("No author") << '\n';
 		std::cout << "other_number: " << out.other_number << '\n';
 		std::cout << "flag: " << out.flag << '\n';
 	}
+}
+
+int main(int argc, char* argv[])
+{
+	parse_and_print_results(argc, argv);
+	// constexpr std::array args{"main", "123",      "--other-number", "456",
+	//                           "bob",  "--author", "steve",          "--flag"};
+
+	// parse_and_print_results(args.size(), args.data());
 
 	std::cout << cli::detail::get_member_name<&mycli::number>() << '\n';
 

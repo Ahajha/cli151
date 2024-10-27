@@ -48,3 +48,30 @@ namespace cli151::compat
 using std::from_chars;
 }
 #endif
+
+#if !__has_include(<print>)
+#	define CLI151_HAS_PRINT false
+#else
+#	include <print>
+#	if !defined __cpp_lib_print
+#		define CLI151_HAS_PRINT false
+#	endif
+#endif
+
+#ifdef CLI151_HAS_PRINT
+#	include <fmt/base.h>
+namespace cli151::compat
+{
+using fmt::formatter;
+using fmt::print;
+using fmt::println;
+} // namespace cli151::compat
+#else
+#	define CLI151_HAS_PRINT true
+namespace cli151::compat
+{
+using std::formatter;
+using std::print;
+using std::println;
+} // namespace cli151::compat
+#endif
