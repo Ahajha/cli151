@@ -8,14 +8,14 @@ template <class CharType>
 struct cli151::compat::formatter<cli151::error::error_formatter, CharType>
 {
 	template <class context>
-	constexpr auto parse(context& ctx) -> context::iterator
+	constexpr auto parse(context& ctx) -> typename context::iterator
 	{
 		return ctx.begin();
 	}
 
 	template <class context>
-	constexpr auto format(const cli151::error::error_formatter& err, context& ctx) const
-		-> context::iterator
+	constexpr auto format(const cli151::error::error_formatter& err, context& ctx) const ->
+		typename context::iterator
 	{
 		assert(err.err.arg_index < err.argc);
 		return format_to(ctx.out(), "{} at position {} ({})",
