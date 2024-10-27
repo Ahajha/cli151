@@ -75,15 +75,22 @@ inline auto parse_value(T& out, const int argc, const char* const* argv,
 				const auto [ptr, ec] =
 					compat::from_chars(result.data(), result.data() + result.size(), out);
 
-				if (ec != std::errc{})
+				if (ec == std::errc())
 				{
-					return compat::unexpected(error{
-						.type = error_type::invalid_number,
-						.arg_index = current_index,
-					});
+					return {};
 				}
 
-				return {};
+				// By the contract of std::from_chars
+				assert(ec == std::errc::result_out_of_range || ec == std::errc::invalid_argument);
+
+				const auto type = ec == std::errc::result_out_of_range
+		                              ? error_type::number_out_of_range
+		                              : error_type::not_a_number;
+
+				return compat::unexpected(error{
+					.type = type,
+					.arg_index = --current_index,
+				});
 			});
 }
 
