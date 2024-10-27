@@ -57,7 +57,7 @@ using std::from_chars;
 // Having <print> and having >C++20 should be sufficient to test instead.
 // We'll just test some arbitrary number higher than 202002L, since
 // apple-clang 15 doesn't set it to 202302L in C++23 mode.
-#	if __cplusplus < 202102L
+#	if __cplusplus < 202003L
 #		define CLI151_HAS_PRINT false
 #	endif
 #endif
