@@ -53,7 +53,9 @@ using std::from_chars;
 #	define CLI151_HAS_PRINT false
 #else
 #	include <print>
-#	if !defined __cpp_lib_print
+// Apple-clang 15 doesn't define __cpp_lib_print, even though it should.
+// Having <print> and having C++23 should be sufficient to test instead.
+#	if __cplusplus < 202302L
 #		define CLI151_HAS_PRINT false
 #	endif
 #endif
