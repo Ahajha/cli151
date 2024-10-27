@@ -17,7 +17,7 @@ include(cmake/print.cmake)
 add_library(cli151 INTERFACE)
 target_include_directories(cli151 INTERFACE include)
 target_compile_features(cli151 INTERFACE cxx_std_20)
-target_link_libraries(cli151 INTERFACE frozen::frozen std_expected_compat std_from_chars_compat)
+target_link_libraries(cli151 INTERFACE frozen::frozen std_expected_compat std_from_chars_compat std_print_compat)
 
 include (CTest)
 
