@@ -18,8 +18,8 @@ struct cli151::compat::formatter<cli151::error::error_formatter, CharType>
 		typename context::iterator
 	{
 		assert(err.err.arg_index < err.argc);
-		return format_to(ctx.out(), "{} at position {} ({})",
-		                 cli151::detail::error_to_string(err.err.type), err.err.arg_index,
-		                 err.argv[err.err.arg_index]);
+		return cli151::compat::format_to(ctx.out(), "{} at position {} ({})",
+		                                 cli151::detail::error_to_string(err.err.type),
+		                                 err.err.arg_index, err.argv[err.err.arg_index]);
 	}
 };
