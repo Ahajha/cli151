@@ -82,6 +82,25 @@ consteval auto type_of_arg() -> arg_type
 	}
 };
 
+struct help_data
+{
+	std::string_view name;
+	std::string_view abbr;
+	std::string_view help;
+};
+
+template <class T, std::size_t I>
+consteval auto make_help_data() -> help_data
+{
+	constexpr opt data = std::get<I>(meta<T>::value.args_).options;
+
+	return {
+		.name = kebabbed_name<T, I>::name,
+		.abbr = kebabbed_name<T, I>::abbr,
+		.help = data.help,
+	};
+}
+
 // Workaround since frozen::string isn't default constructible.
 // The data in the array is arbitrary and will be overwritten.
 template <std::size_t... Is>
@@ -245,6 +264,10 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 
 	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
 		parse_value_into_struct<T, Is>...,
+	};
+
+	constexpr static std::array<help_data, sizeof...(Is)> index_to_help_map{
+		make_help_data<T, Is>()...,
 	};
 
 	// Indexes of all the positional arguments in the order they appear.

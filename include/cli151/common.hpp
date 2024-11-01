@@ -33,6 +33,7 @@ enum class error_type
 
 struct error
 {
+	template <class T>
 	struct error_formatter
 	{
 		error& err;
@@ -43,14 +44,19 @@ struct error
 	error_type type;
 	int arg_index;
 
-	auto formatter(int argc, const char* const* argv) -> error_formatter
+	template <class T>
+	auto formatter(int argc, const char* const* argv) -> error_formatter<T>
 	{
-		return error_formatter{*this, argc, argv};
+		return error_formatter<T>{*this, argc, argv};
 	}
 };
 
 template <class T>
 using expected = compat::expected<T, error>;
+
+template <class T>
+struct help_formatter
+{};
 
 enum class arg_type
 {
