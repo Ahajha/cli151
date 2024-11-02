@@ -128,8 +128,8 @@ consteval auto default_name_to_index_map_data(std::index_sequence<Is...>)
 	};
 }
 
-template <class T, std::size_t... Is>
-consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
+template <class T>
+consteval auto make_long_name_to_index_map_data()
 {
 	constexpr auto should_include = [](const help_data& info)
 	{ return !info.name.empty() && info.type == arg_type::keyword; };
@@ -166,7 +166,7 @@ consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 		{
 			assert(name.size() > 0);
 			assert(name != default_);
-			assert(i < sizeof...(Is));
+			assert(i < meta<T>::value.n_args);
 		}
 #endif
 
@@ -174,8 +174,8 @@ consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 	}
 }
 
-template <class T, std::size_t... Is>
-consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
+template <class T>
+consteval auto make_short_name_to_index_map_data()
 {
 	constexpr auto should_include = [](const help_data& info)
 	{ return !info.abbr.empty() && info.type == arg_type::keyword; };
@@ -212,7 +212,7 @@ consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
 		{
 			assert(name.size() > 0);
 			assert(name != default_);
-			assert(i < sizeof...(Is));
+			assert(i < meta<T>::value.n_args);
 		}
 #endif
 
@@ -220,7 +220,7 @@ consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
 	}
 }
 
-template <class T, std::size_t... Is>
+template <class T>
 consteval auto make_positional_args_indexes_data()
 {
 	constexpr auto should_include = [](const help_data& info)
@@ -245,7 +245,7 @@ consteval auto make_positional_args_indexes_data()
 	assert(index == size);
 	for ([[maybe_unused]] const auto i : data)
 	{
-		assert(i < sizeof...(Is));
+		assert(i < meta<T>::value.n_args);
 	}
 #endif
 
@@ -268,10 +268,10 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 	// of names is cheap.
 
 	// Maps long and short names of keyword arguments to the index in index_to_handler_map.
-	constexpr static auto long_name_to_index_map = frozen::make_unordered_map(
-		make_long_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
-	constexpr static auto short_name_to_index_map = frozen::make_unordered_map(
-		make_short_name_to_index_map_data<T, Is...>(std::index_sequence<Is...>()));
+	constexpr static auto long_name_to_index_map =
+		frozen::make_unordered_map(make_long_name_to_index_map_data<T>());
+	constexpr static auto short_name_to_index_map =
+		frozen::make_unordered_map(make_short_name_to_index_map_data<T>());
 
 	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
 		parse_value_into_struct<T, Is>...,
@@ -283,7 +283,7 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 	// 0, 1, 2, 3, ... In that case, this array serves as an unnecessary indirection. Either we
 	// can skip the array conditionally (likely easy), or we can rearrange the args (likely
 	// difficult).
-	constexpr static auto positional_args_indexes = make_positional_args_indexes_data<T, Is...>();
+	constexpr static auto positional_args_indexes = make_positional_args_indexes_data<T>();
 };
 
 template <class T>
