@@ -8,6 +8,7 @@
 #include <frozen/string.h>
 #include <frozen/unordered_map.h>
 
+#include <algorithm>
 #include <array>
 #include <string_view>
 #include <tuple> // IWYU pragma: keep (std::get<std::tuple>)
