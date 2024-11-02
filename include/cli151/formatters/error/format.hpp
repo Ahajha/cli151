@@ -20,25 +20,59 @@ struct cli151::compat::formatter<cli151::error::error_formatter<T>, CharType>
 	{
 		assert(err.err.arg_index < err.argc);
 
-		// TODO: Print the names of all positional args
-		cli151::compat::format_to(ctx.out(), "{} [OPTIONS]\n", err.argv[0]);
+		using cli151::compat::format_to;
 
-		// Then print help text for all args (split into keyword and positional later)
-		for (const auto& info : cli151::detail::help_data_of<T>::data)
+		const auto& help_data = cli151::detail::help_data_of<T>::data;
+
+		format_to(ctx.out(), "{}", err.argv[0]);
+		// TODO: Currently this is assuming the order of the positional args
+		for (const auto& data : help_data)
 		{
-			if (info.help == cli151::default_)
+			if (data.type == cli151::arg_type::positional_required)
 			{
-				cli151::compat::format_to(ctx.out(), "    -{}, --{}\n", info.abbr, info.name);
+				// TODO: This is kebabbed, don't want that
+				format_to(ctx.out(), " {}", data.name);
 			}
-			else
+		}
+		// TODO: skip [OPTIONS] if no keyword args
+		format_to(ctx.out(), " [OPTIONS]\n");
+
+		// TODO: skip this one if no positional args
+		format_to(ctx.out(), "Positional arguments:\n");
+		for (const auto& data : help_data)
+		{
+			if (data.type == cli151::arg_type::positional_required)
 			{
-				cli151::compat::format_to(ctx.out(), "    -{}, --{}: {}\n", info.abbr, info.name,
-				                          info.help);
+				// TODO: This is kebabbed, don't want that
+				format_to(ctx.out(), "    {}", data.name);
+
+				if (data.help != cli151::default_)
+				{
+					format_to(ctx.out(), ": {}", data.help);
+				}
+				format_to(ctx.out(), "\n");
 			}
 		}
 
-		return cli151::compat::format_to(ctx.out(), "{} at position {} ({})",
-		                                 cli151::detail::error_to_string(err.err.type),
-		                                 err.err.arg_index, err.argv[err.err.arg_index]);
+		// TODO: Skip if no keyword args
+		format_to(ctx.out(), "Options:\n");
+		for (const auto& data : help_data)
+		{
+			if (data.type == cli151::arg_type::keyword)
+			{
+				// TODO: Only one might be available
+				format_to(ctx.out(), "    -{}, --{}", data.abbr, data.name);
+
+				if (data.help != cli151::default_)
+				{
+					format_to(ctx.out(), ": {}", data.help);
+				}
+				format_to(ctx.out(), "\n");
+			}
+		}
+
+		return format_to(ctx.out(), "{} at position {} ({})",
+		                 cli151::detail::error_to_string(err.err.type), err.err.arg_index,
+		                 err.argv[err.err.arg_index]);
 	}
 };
