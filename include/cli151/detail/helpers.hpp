@@ -87,6 +87,7 @@ struct help_data
 	std::string_view name;
 	std::string_view abbr;
 	std::string_view help;
+	arg_type type;
 };
 
 template <class T, std::size_t I>
@@ -98,6 +99,7 @@ consteval auto make_help_data() -> help_data
 		.name = kebabbed_name<T, I>::name,
 		.abbr = kebabbed_name<T, I>::abbr,
 		.help = data.help,
+		.type = type_of_arg<T, I>(),
 	};
 }
 
@@ -129,9 +131,11 @@ consteval auto default_name_to_index_map_data(std::index_sequence<Is...>)
 template <class T, std::size_t... Is>
 consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 {
-	constexpr auto size =
-		((!kebabbed_name<T, Is>::name.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
-	     0);
+	constexpr auto should_include = [](const help_data& info)
+	{ return !info.name.empty() && info.type == arg_type::keyword; };
+
+	const auto& help_data = help_data_of<T>::data;
+	constexpr auto size = std::count_if(help_data.begin(), help_data.end(), should_include);
 
 	// Temp hack: Seems to be some issues with 0-length data.
 	if constexpr (size == 0)
@@ -146,21 +150,15 @@ consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 
 		std::size_t index = 0;
 
-		const auto adder = [&data, &index]<std::size_t I>()
+		for (std::size_t i = 0; i < help_data.size(); ++i)
 		{
-			using info = kebabbed_name<T, I>;
-			// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
-			// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
-			// Otherwise, we could do data[index++] = {info::name, I};
-			if constexpr (!info::name.empty() && type_of_arg<T, I>() == arg_type::keyword)
+			if (should_include(help_data[i]))
 			{
-				data[index].first = info::name;
-				data[index].second = I;
-				index++;
+				data[index].first = help_data[i].name;
+				data[index].second = i;
+				++index;
 			}
-		};
-
-		(adder.template operator()<Is>(), ...);
+		}
 
 #ifndef NDEBUG
 		assert(index == size);
@@ -179,9 +177,11 @@ consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 template <class T, std::size_t... Is>
 consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
 {
-	constexpr auto size =
-		((!kebabbed_name<T, Is>::abbr.empty() && type_of_arg<T, Is>() == arg_type::keyword) + ... +
-	     0);
+	constexpr auto should_include = [](const help_data& info)
+	{ return !info.abbr.empty() && info.type == arg_type::keyword; };
+
+	const auto& help_data = help_data_of<T>::data;
+	constexpr auto size = std::count_if(help_data.begin(), help_data.end(), should_include);
 
 	// Temp hack: Seems to be some issues with 0-length data.
 	if constexpr (size == 0)
@@ -196,21 +196,15 @@ consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
 
 		std::size_t index = 0;
 
-		const auto adder = [&data, &index]<std::size_t I>()
+		for (std::size_t i = 0; i < help_data.size(); ++i)
 		{
-			using info = kebabbed_name<T, I>;
-			// Workaround for libc++10/11, which has non-constexpr std::pair assignments.
-			// https://github.com/llvm/llvm-project/commit/737a4501e815d8dd57e5095dbbbede500dfa8ccb
-			// Otherwise, we could do data[index++] = {info::abbr, I};
-			if constexpr (!info::abbr.empty() && type_of_arg<T, I>() == arg_type::keyword)
+			if (should_include(help_data[i]))
 			{
-				data[index].first = info::abbr;
-				data[index].second = I;
-				index++;
+				data[index].first = help_data[i].abbr;
+				data[index].second = i;
+				++index;
 			}
-		};
-
-		(adder.template operator()<Is>(), ...);
+		}
 
 #ifndef NDEBUG
 		assert(index == size);
