@@ -64,8 +64,8 @@ inline auto parse_value(const char*& out, const int argc, const char* const* arg
 
 template <class T>
 	requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
-inline auto parse_value(T& out, const int argc, const char* const* argv,
-                        std::optional<std::string_view> current_value, int& current_index)
+auto parse_value(T& out, const int argc, const char* const* argv,
+                 std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
 	return get_next_value(argc, argv, current_value, current_index)
@@ -169,8 +169,8 @@ auto parse_value(std::array<T, N>& out, const int argc, const char* const* argv,
 }
 
 template <class T>
-inline auto parse_value(std::optional<T>& out, const int argc, const char* const* argv,
-                        std::optional<std::string_view> current_value, int& current_index)
+auto parse_value(std::optional<T>& out, const int argc, const char* const* argv,
+                 std::optional<std::string_view> current_value, int& current_index)
 	-> expected<void>
 {
 	T result{};
