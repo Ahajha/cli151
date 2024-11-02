@@ -223,21 +223,23 @@ consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
 template <class T, std::size_t... Is>
 consteval auto make_positional_args_indexes_data()
 {
-	constexpr auto size = ((type_of_arg<T, Is>() == arg_type::positional_required) + ... + 0);
+	constexpr auto should_include = [](const help_data& info)
+	{ return info.type == arg_type::positional_required; };
+
+	const auto& help_data = help_data_of<T>::data;
+	constexpr auto size = std::count_if(help_data.begin(), help_data.end(), should_include);
 
 	std::array<std::size_t, size> data{};
 
 	std::size_t index = 0;
 
-	const auto adder = [&data, &index]<std::size_t I>()
+	for (std::size_t i = 0; i < help_data.size(); ++i)
 	{
-		if constexpr (type_of_arg<T, I>() == arg_type::positional_required)
+		if (should_include(help_data[i]))
 		{
-			data[index++] = I;
+			data[index++] = i;
 		}
-	};
-
-	(adder.template operator()<Is>(), ...);
+	}
 
 #ifndef NDEBUG
 	assert(index == size);
