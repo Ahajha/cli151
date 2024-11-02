@@ -24,7 +24,7 @@ struct cli151::compat::formatter<cli151::error::error_formatter<T>, CharType>
 		cli151::compat::format_to(ctx.out(), "{} [OPTIONS]\n", err.argv[0]);
 
 		// Then print help text for all args (split into keyword and positional later)
-		for (const auto& info : cli151::detail::handler_dispatcher<T>::index_to_help_map)
+		for (const auto& info : cli151::detail::help_data_of<T>::data)
 		{
 			if (info.help == cli151::default_)
 			{

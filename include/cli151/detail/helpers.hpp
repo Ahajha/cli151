@@ -101,6 +101,21 @@ consteval auto make_help_data() -> help_data
 	};
 }
 
+template <class T, class Seq>
+struct help_data_of_impl
+{};
+
+template <class T, std::size_t... Is>
+struct help_data_of_impl<T, std::index_sequence<Is...>>
+{
+	constexpr static std::array data{
+		make_help_data<T, Is>()...,
+	};
+};
+
+template <class T>
+using help_data_of = help_data_of_impl<T, std::make_index_sequence<meta<T>::value.n_args>>;
+
 // Workaround since frozen::string isn't default constructible.
 // The data in the array is arbitrary and will be overwritten.
 template <std::size_t... Is>
@@ -266,10 +281,6 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 		parse_value_into_struct<T, Is>...,
 	};
 
-	constexpr static std::array<help_data, sizeof...(Is)> index_to_help_map{
-		make_help_data<T, Is>()...,
-	};
-
 	// Indexes of all the positional arguments in the order they appear.
 	// (TODO: In the future when we handle positional_optional, those will all be at the end)
 	// Potential future TODO: Ideally, and likely in most circumstances, this array will just be
@@ -281,7 +292,7 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 
 template <class T>
 using handler_dispatcher =
-	handler_dispatcher_impl<T, std::make_index_sequence<cli151::meta<T>::value.n_args>>;
+	handler_dispatcher_impl<T, std::make_index_sequence<meta<T>::value.n_args>>;
 
 template <class T>
 auto parse_long_keyword(const std::string_view view, int& arg_index)
