@@ -139,8 +139,8 @@ consteval auto make_long_name_to_index_map_data(std::index_sequence<Is...>)
 			// Otherwise, we could do data[index++] = {info::name, I};
 			if constexpr (!info::name.empty() && type_of_arg<T, I>() == arg_type::keyword)
 			{
-				std::get<0>(data[index]) = info::name;
-				std::get<1>(data[index]) = I;
+				data[index].first = info::name;
+				data[index].second = I;
 				index++;
 			}
 		};
@@ -189,8 +189,8 @@ consteval auto make_short_name_to_index_map_data(std::index_sequence<Is...>)
 			// Otherwise, we could do data[index++] = {info::abbr, I};
 			if constexpr (!info::abbr.empty() && type_of_arg<T, I>() == arg_type::keyword)
 			{
-				std::get<0>(data[index]) = info::abbr;
-				std::get<1>(data[index]) = I;
+				data[index].first = info::abbr;
+				data[index].second = I;
 				index++;
 			}
 		};
