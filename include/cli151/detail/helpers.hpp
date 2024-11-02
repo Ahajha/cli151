@@ -135,7 +135,7 @@ consteval auto make_long_name_to_index_map_data()
 	constexpr auto should_include = [](const help_data& info)
 	{ return !info.name.empty() && info.type == arg_type::keyword; };
 
-	const auto& help_data = help_data_of<T>::data;
+	const auto help_data = help_data_of<T>::data;
 	constexpr auto size = std::count_if(help_data.begin(), help_data.end(), should_include);
 
 	// Temp hack: Seems to be some issues with 0-length data.
@@ -181,7 +181,7 @@ consteval auto make_short_name_to_index_map_data()
 	constexpr auto should_include = [](const help_data& info)
 	{ return !info.abbr.empty() && info.type == arg_type::keyword; };
 
-	const auto& help_data = help_data_of<T>::data;
+	const auto help_data = help_data_of<T>::data;
 	constexpr auto size = std::count_if(help_data.begin(), help_data.end(), should_include);
 
 	// Temp hack: Seems to be some issues with 0-length data.
@@ -227,7 +227,7 @@ consteval auto make_positional_args_indexes_data()
 	constexpr auto should_include = [](const help_data& info)
 	{ return info.type == arg_type::positional_required; };
 
-	const auto& help_data = help_data_of<T>::data;
+	const auto help_data = help_data_of<T>::data;
 	constexpr auto size = std::count_if(help_data.begin(), help_data.end(), should_include);
 
 	std::array<std::size_t, size> data{};
