@@ -4,9 +4,10 @@
 #include <cli151/detail/compat.hpp>
 #include <cli151/detail/helpers.hpp>
 #include <cli151/formatters/detail/error_to_string.hpp>
+#include <cli151/formatters/usage/format.hpp>
 
 template <class CharType, class T>
-struct cli151::compat::formatter<cli151::error::error_formatter<T>, CharType>
+struct cli151::compat::formatter<cli151::error_formatter<T>, CharType>
 {
 	template <class context>
 	constexpr auto parse(context& ctx) -> typename context::iterator
@@ -15,7 +16,7 @@ struct cli151::compat::formatter<cli151::error::error_formatter<T>, CharType>
 	}
 
 	template <class context>
-	constexpr auto format(const cli151::error::error_formatter<T>& err, context& ctx) const ->
+	constexpr auto format(const cli151::error_formatter<T>& err, context& ctx) const ->
 		typename context::iterator
 	{
 		assert(err.err.arg_index < err.argc);
@@ -24,18 +25,7 @@ struct cli151::compat::formatter<cli151::error::error_formatter<T>, CharType>
 
 		const auto& help_data = cli151::detail::help_data_of<T>::data;
 
-		format_to(ctx.out(), "{}", err.argv[0]);
-		// TODO: Currently this is assuming the order of the positional args
-		for (const auto& data : help_data)
-		{
-			if (data.type == cli151::arg_type::positional_required)
-			{
-				// TODO: This is kebabbed, don't want that
-				format_to(ctx.out(), " {}", data.name);
-			}
-		}
-		// TODO: skip [OPTIONS] if no keyword args
-		format_to(ctx.out(), " [OPTIONS]\n");
+		format_to(ctx.out(), "{}\n", cli151::usage_formatter<T>{err.argv[0]});
 
 		// TODO: skip this one if no positional args
 		format_to(ctx.out(), "Positional arguments:\n");

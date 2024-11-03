@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
 	if (!result)
 	{
-		cli::compat::println("Error: {}", result.error().formatter<mycli>(argc, argv));
+		cli::compat::println("{}", result.error().formatter<mycli>(argc, argv));
 	}
 	else
 	{

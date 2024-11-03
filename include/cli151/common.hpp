@@ -31,16 +31,18 @@ enum class error_type
 	duplicate_arg,
 };
 
+struct error;
+
+template <class T>
+struct error_formatter
+{
+	error& err;
+	int argc;
+	const char* const* argv;
+};
+
 struct error
 {
-	template <class T>
-	struct error_formatter
-	{
-		error& err;
-		int argc;
-		const char* const* argv;
-	};
-
 	error_type type;
 	int arg_index;
 
@@ -49,6 +51,12 @@ struct error
 	{
 		return error_formatter<T>{*this, argc, argv};
 	}
+};
+
+template <class T>
+struct usage_formatter
+{
+	std::string_view prog_name;
 };
 
 template <class T>
