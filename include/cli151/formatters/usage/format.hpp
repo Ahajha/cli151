@@ -3,7 +3,6 @@
 #include <cli151/common.hpp>
 #include <cli151/detail/compat.hpp>
 #include <cli151/detail/helpers.hpp>
-#include <cli151/formatters/detail/error_to_string.hpp>
 
 template <class CharType, class T>
 struct cli151::compat::formatter<cli151::usage_formatter<T>, CharType>
