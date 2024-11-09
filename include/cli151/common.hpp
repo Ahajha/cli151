@@ -26,8 +26,9 @@ enum class error_type
 	invalid_key,
 	not_a_number,
 	number_out_of_range,
-	no_more_positional_args,
-	missing_args, // TODO this might need more data depending on how many missing args there are
+	too_many_positional_args,
+	not_enough_positional_args, // TODO this might need more data depending on how many missing args
+	                            // there are
 	duplicate_arg,
 };
 

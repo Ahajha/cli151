@@ -82,7 +82,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			{
 				// TODO: This may behave differently if there is a trailing container in T
 				return compat::unexpected(error{
-					.type = error_type::no_more_positional_args,
+					.type = error_type::too_many_positional_args,
 					.arg_index = arg_index,
 				});
 			}

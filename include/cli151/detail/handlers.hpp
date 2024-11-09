@@ -25,7 +25,7 @@ inline auto get_next_value(const int argc, const char* const* argv,
 	else if (current_index >= argc)
 	{
 		return compat::unexpected(error{
-			.type = error_type::missing_args,
+			.type = error_type::not_enough_positional_args,
 			.arg_index = --current_index,
 		});
 	}
