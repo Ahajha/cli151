@@ -3,7 +3,6 @@
 #include <cli151/common.hpp>
 #include <cli151/detail/compat.hpp>
 #include <cli151/detail/helpers.hpp>
-#include <cli151/formatters/detail/error_to_string.hpp>
 #include <cli151/formatters/usage/format.hpp>
 
 template <class CharType, class T>
@@ -61,8 +60,6 @@ struct cli151::compat::formatter<cli151::error_formatter<T>, CharType>
 			}
 		}
 
-		return format_to(ctx.out(), "{} at position {} ({})",
-		                 cli151::detail::error_to_string(err.err.type), err.err.arg_index,
-		                 err.argv[err.err.arg_index]);
+		return ctx.out();
 	}
 };
