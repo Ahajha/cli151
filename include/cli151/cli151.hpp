@@ -30,6 +30,14 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 	// Skip over argv[0]
 	int arg_index = 1;
 	std::size_t next_positional_arg_to_parse = 0;
+
+	const auto call_handler = [&](const auto& parse_result)
+	{
+		const auto [handler_index, value] = parse_result;
+		const auto handler = dispatcher::index_to_handler_map[handler_index];
+		return handler(result, argc, argv, value, arg_index, used[handler_index]);
+	};
+
 	while (arg_index < argc)
 	{
 		const std::string_view view = argv[arg_index];
@@ -39,15 +47,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			// Long form
 
 			const auto handler_result =
-				detail::parse_long_keyword<T>(view, arg_index)
-					.and_then(
-						[&](const auto& parse_result)
-						{
-							const auto [handler_index, value] = parse_result;
-							const auto handler = dispatcher::index_to_handler_map[handler_index];
-							return handler(result, argc, argv, value, arg_index,
-				                           used[handler_index]);
-						});
+				detail::parse_long_keyword<T>(view, arg_index).and_then(call_handler);
 
 			if (!handler_result)
 			{
@@ -59,15 +59,7 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			// Short form
 
 			const auto handler_result =
-				detail::parse_short_keyword<T>(view, arg_index)
-					.and_then(
-						[&](const auto& parse_result)
-						{
-							const auto [handler_index, value] = parse_result;
-							const auto handler = dispatcher::index_to_handler_map[handler_index];
-							return handler(result, argc, argv, value, arg_index,
-				                           used[handler_index]);
-						});
+				detail::parse_short_keyword<T>(view, arg_index).and_then(call_handler);
 
 			if (!handler_result)
 			{
@@ -90,7 +82,6 @@ auto parse(int argc, const char* const* argv) -> expected<T>
 			const auto handler_index =
 				dispatcher::positional_args_indexes[next_positional_arg_to_parse++];
 
-			// TODO: This code is (nearly) identical in both branches
 			const auto handler = dispatcher::index_to_handler_map[handler_index];
 
 			const auto handler_result =
