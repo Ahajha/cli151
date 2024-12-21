@@ -99,7 +99,7 @@ jobs:
           - runner: macos-13
             compiler:
               name: apple-clang
-              version: 14.3
+              version: 14
               cppstd: 20
             os: Macos
             arch: x86_64
