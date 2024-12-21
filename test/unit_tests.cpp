@@ -247,15 +247,15 @@ struct cli::meta<int_only<Int>>
 	constexpr static auto value = args{&T::number};
 };
 
-TEST_CASE_TEMPLATE("Integrals and floats", Int, std::uint8_t, std::int8_t, std::uint16_t,
+TEST_CASE_TEMPLATE("Integrals and floats", T, std::uint8_t, std::int8_t, std::uint16_t,
                    std::int16_t, std::uint32_t, std::int32_t, std::uint64_t, std::int64_t, float,
                    double)
 {
 	constexpr std::array args{"main", "1"};
-	const auto result = cli::parse<int_only<Int>>(args.size(), args.data());
+	const auto result = cli::parse<int_only<T>>(args.size(), args.data());
 	REQUIRE(result);
 
-	CHECK(result.value().number == 1);
+	CHECK(result.value().number == T(1));
 }
 
 // Skip std::uint64_t since we're testing with the max of that type
