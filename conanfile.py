@@ -115,7 +115,7 @@ class Cli151Conan(ConanFile):
         if not self._has_std_expected:
             self.requires("tl-expected/1.1.0")
         if not self._has_std_from_chars:
-            self.requires("fast_float/6.1.5")
+            self.requires("fast_float/7.0.0")
         if not self._has_std_print:
             self.requires("fmt/11.0.2")
 
