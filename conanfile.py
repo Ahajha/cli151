@@ -1,14 +1,13 @@
 from conan import ConanFile
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.build import check_min_cppstd, valid_min_cppstd
-from conan.tools.cmake import cmake_layout, CMake
+from conan.tools.cmake import cmake_layout, CMake, CMakeDeps, CMakeToolchain
 from conan.tools.microsoft import is_msvc, check_min_vs
 from conan.tools.scm import Version
 
 class Cli151Conan(ConanFile):
     name = "cli151"
     settings = "os", "arch", "compiler", "build_type"
-    generators = "CMakeDeps", "CMakeToolchain"
 
     def validate(self):
         # check c++20 first
@@ -123,6 +122,14 @@ class Cli151Conan(ConanFile):
 
     def layout(self):
         cmake_layout(self)
+
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.variables["CLI151_USE_FETCHCONTENT"] = False
+        tc.generate()
+
+        deps = CMakeDeps(self)
+        deps.generate()
 
     def build(self):
         cmake = CMake(self)
