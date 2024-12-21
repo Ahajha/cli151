@@ -1,7 +1,7 @@
 add_executable(example test.cpp)
 target_link_libraries(example PRIVATE cli151)
 
-find_package(doctest REQUIRED)
+include (${CMAKE_CURRENT_SOURCE_DIR}/../cmake/doctest.cmake)
 
 add_executable(unit_tests unit_tests.cpp)
 target_link_libraries(unit_tests PRIVATE cli151 doctest::doctest)
