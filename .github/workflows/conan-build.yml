@@ -129,7 +129,6 @@ jobs:
       - name: Install Conan
         run: |
           pip install conan
-          conan config install conan/settings_user.yml
         env:
           # We're in a sandbox of some sort, so for simplicity just force install globally
           PIP_BREAK_SYSTEM_PACKAGES: "1"
