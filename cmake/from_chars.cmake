@@ -25,10 +25,10 @@ elseif (CLI151_USE_FETCHCONTENT)
     )
     FetchContent_MakeAvailable(fast_float)
 
-    target_link_libraries(std_from_chars_compat INTERFACE fast_float)
+    target_link_libraries(std_from_chars_compat INTERFACE FastFloat::fast_float)
 else()
     message(STATUS "cli151: Using fast_float::from_chars (find_package)")
 
     find_package(FastFloat REQUIRED)
-    target_link_libraries(std_from_chars_compat INTERFACE fast_float)
+    target_link_libraries(std_from_chars_compat INTERFACE FastFloat::fast_float)
 endif()
