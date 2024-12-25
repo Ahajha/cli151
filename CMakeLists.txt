@@ -16,7 +16,7 @@ if (CLI151_IS_TOP_LEVEL)
     if (MSVC)
         add_compile_options(/W4)
     else()
-        add_compile_options(-Wall -Wextra -Wconversion -Wshadow -fno-exceptions)
+        add_compile_options(-Wall -Wextra -Wconversion -Wshadow -Wpedantic -fno-exceptions -Werror)
     endif()
 endif()
 
