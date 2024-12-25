@@ -81,7 +81,7 @@ consteval auto type_of_arg() -> arg_type
 	{
 		return type_of_arg<T, N - 1>();
 	}
-};
+}
 
 struct help_data
 {
