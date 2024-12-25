@@ -31,7 +31,7 @@ struct cli::meta<mycli>
 
 int main(int argc, char* argv[])
 {
-	auto result = cli::parse<mycli>(argc, argv);
+	const auto result = cli::parse<mycli>(argc, argv);
 
 	if (!result)
 	{

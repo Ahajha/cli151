@@ -37,7 +37,7 @@ struct error;
 template <class T>
 struct error_formatter
 {
-	error& err;
+	const error& err;
 	int argc;
 	const char* const* argv;
 };
@@ -48,7 +48,7 @@ struct error
 	int arg_index;
 
 	template <class T>
-	auto formatter(int argc, const char* const* argv) -> error_formatter<T>
+	auto formatter(int argc, const char* const* argv) const -> error_formatter<T>
 	{
 		return error_formatter<T>{*this, argc, argv};
 	}
