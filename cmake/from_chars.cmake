@@ -21,8 +21,7 @@ elseif (CLI151_USE_FETCHCONTENT)
     FetchContent_Declare(
         fast_float
         GIT_REPOSITORY https://github.com/fastfloat/fast_float.git
-        GIT_TAG        v7.0.0
-        PATCH_COMMAND git apply ${CMAKE_CURRENT_LIST_DIR}/patches/fastfloat_suppress_cmake_warning.patch
+        GIT_TAG        v8.0.2
         UPDATE_DISCONNECTED 1
     )
     FetchContent_MakeAvailable(fast_float)
