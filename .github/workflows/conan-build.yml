@@ -31,7 +31,7 @@ jobs:
               version: 14
               cppstd: 23
           # Linux/Clang/libc++
-          - runner: ubuntu-20.04
+          - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
             compiler:
@@ -48,7 +48,7 @@ jobs:
               libcxx: libc++
               cppstd: 23
           # Linux/Clang/libstdc++
-          - runner: ubuntu-20.04
+          - runner: ubuntu-22.04
             arch: x86_64
             os: Linux
             compiler:
