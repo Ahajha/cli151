@@ -7,15 +7,16 @@
 namespace cli151
 {
 
-template <class T, class Out = std::FILE*>
-auto parse(int argc, const char* const* argv, [[maybe_unused]] Out out = stderr) -> expected<T>
+template <class T, class Stream = std::FILE*>
+auto parse(int argc, const char* const* argv,
+           [[maybe_unused]] Stream errstream = stderr) -> expected<T>
 {
 	// T is probably an aggregate. We 0-initialize (or whichever type of initialization C++ calls
 	// this) the result to prevent random values from appearing. Not sure if this should be part of
 	// the public API, but could prevent some cryptic bugs.
 	T result{};
 
-	using dispatcher = detail::handler_dispatcher<T>;
+	using dispatcher = detail::handler_dispatcher<T, Stream>;
 
 	std::array<bool, dispatcher::index_to_handler_map.size()> used{};
 
@@ -35,7 +36,7 @@ auto parse(int argc, const char* const* argv, [[maybe_unused]] Out out = stderr)
 	{
 		const auto [handler_index, value] = parse_result;
 		const auto handler = dispatcher::index_to_handler_map[handler_index];
-		return handler(result, argc, argv, value, arg_index, used[handler_index]);
+		return handler(result, argc, argv, value, arg_index, used[handler_index], errstream);
 	};
 
 	while (arg_index < argc)
@@ -47,7 +48,7 @@ auto parse(int argc, const char* const* argv, [[maybe_unused]] Out out = stderr)
 			// Long form
 
 			const auto handler_result =
-				detail::parse_long_keyword<T>(view, arg_index).and_then(call_handler);
+				detail::parse_long_keyword<T>(view, arg_index, errstream).and_then(call_handler);
 
 			if (!handler_result)
 			{
@@ -59,7 +60,7 @@ auto parse(int argc, const char* const* argv, [[maybe_unused]] Out out = stderr)
 			// Short form
 
 			const auto handler_result =
-				detail::parse_short_keyword<T>(view, arg_index).and_then(call_handler);
+				detail::parse_short_keyword<T>(view, arg_index, errstream).and_then(call_handler);
 
 			if (!handler_result)
 			{
@@ -85,7 +86,7 @@ auto parse(int argc, const char* const* argv, [[maybe_unused]] Out out = stderr)
 			const auto handler = dispatcher::index_to_handler_map[handler_index];
 
 			const auto handler_result =
-				handler(result, argc, argv, {}, arg_index, used[handler_index]);
+				handler(result, argc, argv, {}, arg_index, used[handler_index], errstream);
 
 			if (!handler_result)
 			{

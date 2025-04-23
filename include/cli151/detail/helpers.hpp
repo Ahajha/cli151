@@ -253,16 +253,16 @@ consteval auto make_positional_args_indexes_data()
 	return data;
 }
 
-template <class T>
+template <class T, class Out>
 using handler_t = auto (*)(T&, int, const char* const*, std::optional<std::string_view>, int&,
-                           bool&) -> expected<void>;
+                           bool&, Out) -> expected<void>;
 
-template <class T, class Seq>
+template <class T, class Stream, class Seq>
 struct handler_dispatcher_impl
 {};
 
-template <class T, std::size_t... Is>
-struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
+template <class T, class Stream, std::size_t... Is>
+struct handler_dispatcher_impl<T, Stream, std::index_sequence<Is...>>
 {
 	// This is only a map from the long name. We need the short names too, and we need to omit
 	// ones which are not specified. Maybe a helper that computes the data? Counting the number
@@ -274,7 +274,7 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 	constexpr static auto short_name_to_index_map =
 		frozen::make_unordered_map(make_short_name_to_index_map_data<T>());
 
-	constexpr static std::array<handler_t<T>, sizeof...(Is)> index_to_handler_map{
+	constexpr static std::array<handler_t<T, Stream>, sizeof...(Is)> index_to_handler_map{
 		parse_value_into_struct<T, Is>...,
 	};
 
@@ -287,15 +287,16 @@ struct handler_dispatcher_impl<T, std::index_sequence<Is...>>
 	constexpr static auto positional_args_indexes = make_positional_args_indexes_data<T>();
 };
 
-template <class T>
+template <class T, class Stream>
 using handler_dispatcher =
-	handler_dispatcher_impl<T, std::make_index_sequence<meta<T>::value.n_args>>;
+	handler_dispatcher_impl<T, Stream, std::make_index_sequence<meta<T>::value.n_args>>;
 
-template <class T>
-auto parse_long_keyword(const std::string_view view, int& arg_index)
+template <class T, class Stream>
+auto parse_long_keyword(const std::string_view view, int& arg_index,
+                        [[maybe_unused]] Stream errstream)
 	-> expected<std::pair<std::size_t, std::optional<std::string_view>>>
 {
-	using dispatcher = detail::handler_dispatcher<T>;
+	using dispatcher = detail::handler_dispatcher<T, Stream>;
 
 	const auto nodashes = view.substr(2);
 
@@ -321,11 +322,12 @@ auto parse_long_keyword(const std::string_view view, int& arg_index)
 	return std::pair{handler_index->second, value};
 }
 
-template <class T>
-auto parse_short_keyword(const std::string_view view, int& arg_index)
+template <class T, class Stream>
+auto parse_short_keyword(const std::string_view view, int& arg_index,
+                         [[maybe_unused]] Stream errstream)
 	-> expected<std::pair<std::size_t, std::optional<std::string_view>>>
 {
-	using dispatcher = detail::handler_dispatcher<T>;
+	using dispatcher = detail::handler_dispatcher<T, Stream>;
 
 	const auto nodashes = view.substr(1);
 
