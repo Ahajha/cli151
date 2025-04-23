@@ -93,7 +93,7 @@ Work in progress - Future goals are to directly support FetchContent and Conan.
 ## Compiler support
 
 GCC 10+
-Clang 10+ (with libstdc++ or libc++)
+Clang 11+ (with libstdc++ or libc++) (10 _might_ work, but is untested)
 MSVC 2019+
 Apple clang 13+ (12 _might_ work, but is untested)
 

@@ -36,7 +36,7 @@ jobs:
             os: Linux
             compiler:
               name: clang
-              version: 10
+              version: 11
               libcxx: libc++
               cppstd: 20
           - runner: ubuntu-22.04
@@ -53,7 +53,7 @@ jobs:
             os: Linux
             compiler:
               name: clang
-              version: 10
+              version: 11
               libcxx: libstdc++11
               cppstd: 20
           # Test before and after https://github.com/llvm/llvm-project/issues/62801 is fixed
