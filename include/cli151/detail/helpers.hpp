@@ -254,8 +254,8 @@ consteval auto make_positional_args_indexes_data()
 }
 
 template <class T>
-using handler_t = auto(*)(T&, int, const char* const*, std::optional<std::string_view>, int&, bool&)
-                      -> expected<void>;
+using handler_t = auto (*)(T&, int, const char* const*, std::optional<std::string_view>, int&,
+                           bool&) -> expected<void>;
 
 template <class T, class Seq>
 struct handler_dispatcher_impl
@@ -349,6 +349,21 @@ auto parse_short_keyword(const std::string_view view, int& arg_index)
 	++arg_index;
 
 	return std::pair{handler_index->second, value};
+}
+
+// Wrapper to unify format_to() and print()
+
+template <class OutputIt, class... Args>
+OutputIt output(OutputIt out, compat::format_string<Args...> fmt, Args&&... args)
+{
+	return compat::format_to(out, fmt, std::forward<Args>(args)...);
+}
+
+template <class... Args>
+std::FILE* output(std::FILE* out, compat::format_string<Args...> fmt, Args&&... args)
+{
+	compat::print(out, fmt, std::forward<Args>(args)...);
+	return out;
 }
 
 } // namespace cli151::detail

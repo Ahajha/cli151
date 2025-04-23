@@ -66,6 +66,7 @@ using std::from_chars;
 #	include <fmt/base.h>
 namespace cli151::compat
 {
+using fmt::format_string;
 using fmt::format_to;
 using fmt::formatter;
 using fmt::print;
@@ -75,6 +76,7 @@ using fmt::println;
 #	define CLI151_HAS_PRINT true
 namespace cli151::compat
 {
+using std::format_string;
 using std::format_to;
 using std::formatter;
 using std::print;
