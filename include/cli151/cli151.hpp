@@ -7,8 +7,8 @@
 namespace cli151
 {
 
-template <class T>
-auto parse(int argc, const char* const* argv) -> expected<T>
+template <class T, class Out = std::FILE*>
+auto parse(int argc, const char* const* argv, [[maybe_unused]] Out out = stderr) -> expected<T>
 {
 	// T is probably an aggregate. We 0-initialize (or whichever type of initialization C++ calls
 	// this) the result to prevent random values from appearing. Not sure if this should be part of
