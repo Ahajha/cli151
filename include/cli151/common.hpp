@@ -61,9 +61,6 @@ struct usage_formatter
 };
 
 template <class T>
-using expected = compat::expected<T, error>;
-
-template <class T>
 struct help_formatter
 {};
 

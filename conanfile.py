@@ -31,34 +31,6 @@ class Cli151Conan(ConanFile):
                 raise ConanInvalidConfiguration("Apple Clang<12 is not supported")
 
     @property
-    def _has_std_expected(self):
-        # check c++23 first
-        if not valid_min_cppstd(self, "23"):
-            return False
-
-        compiler_version = Version(self.settings.compiler.version)
-        if is_msvc(self):
-            return check_min_vs(self, "193", raise_invalid=False)
-        elif self.settings.compiler == "gcc":
-            return compiler_version >= "12"
-        elif self.settings.compiler == "clang":
-            if self.settings.compiler.libcxx == "libc++":
-                # std::expected added in libc++16, monadic operations in libc++17
-                return compiler_version >= "17"
-            else:
-                # If clang < 19, definitely no.
-                # See https://github.com/llvm/llvm-project/issues/62801
-                # __cpp_concepts == 202002 in clang 19
-                # Otherwise, we depend on the installed libstdc++ version,
-                # which is difficult to model in Conan, so just assume no.
-                return False
-        elif self.settings.compiler == "apple-clang":
-            return compiler_version >= "15"
-
-        # Otherwise, play it safe and assume we don't have it.
-        return False
-
-    @property
     def _has_std_from_chars(self):
         # This is redundant since this library requires C++20, but just for completion.
         if not valid_min_cppstd(self, "17"):
@@ -111,8 +83,6 @@ class Cli151Conan(ConanFile):
     def requirements(self):
         self.requires("frozen/1.2.0")
 
-        if not self._has_std_expected:
-            self.requires("tl-expected/1.1.0")
         if not self._has_std_from_chars:
             self.requires("fast_float/8.0.0")
         if not self._has_std_print:

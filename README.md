@@ -39,7 +39,8 @@ struct cli::meta<mycli>
 // Parse
 int main(int argc, char* argv[])
 {
-    // Returns a cli151::expected<mycli>
+    // Returns a std::optional<mycli>
+    // By default, outputs to stderr on failure
     const auto result = cli::parse<mycli>(argc, argv);
 
     if (result)
@@ -47,10 +48,6 @@ int main(int argc, char* argv[])
         const auto [number, author, cool_flag] = result.value();
 
         // Use the result
-    }
-    else
-    {
-        // Error!
     }
 }
 ```
@@ -140,7 +137,6 @@ would cause this error since both fields abbreviate to `-n`.
 ## Dependencies
 
 - `frozen` for compile time hash maps
-- `tl::expected` when `std::expected` isn't available (either if the compiler doesn't support it or if in C++20 mode)
 - `fast_float` when `std::from_chars` isn't available
 - `fmt` when `std::format` or `std::print(ln)` isn't available (either if the compiler doesn't support it or if in C++20 mode)
 - `doctest` for unit tests
