@@ -235,7 +235,7 @@ auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
 	{
 		if (used)
 		{
-			output(errstream, "Duplicate keyword {}", argv[argc]);
+			output(errstream, "Duplicate keyword");
 			return false;
 		}
 		used = true;
