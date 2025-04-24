@@ -3,9 +3,11 @@
 #include <cli151/common.hpp>
 #include <cli151/detail/compat.hpp>
 #include <cli151/detail/concepts.hpp>
+#include <cli151/detail/output.hpp>
 
 #include <array>
 #include <cassert>
+#include <optional>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -17,7 +19,7 @@ namespace cli151::detail
 template <class Stream>
 auto get_next_value(const int argc, const char* const* argv,
                     std::optional<std::string_view> current_value, int& current_index,
-                    [[maybe_unused]] Stream errstream) -> expected<std::string_view>
+                    Stream errstream) -> std::optional<std::string_view>
 {
 	if (current_value.has_value())
 	{
@@ -25,10 +27,8 @@ auto get_next_value(const int argc, const char* const* argv,
 	}
 	else if (current_index >= argc)
 	{
-		return compat::unexpected(error{
-			.type = error_type::not_enough_positional_args,
-			.arg_index = --current_index,
-		});
+		output(errstream, "Missing expected value");
+		return {};
 	}
 	else
 	{
@@ -37,7 +37,7 @@ auto get_next_value(const int argc, const char* const* argv,
 }
 
 /*
-parse_value(out, argc, argv, current_value, current_index) -> expected
+parse_value(out, argc, argv, current_value, current_index) -> bool
 out: If successful, the result is placed here. On error, no change.
 argc/argv: Passed from the command line
 current_value: Based on the argument type and how it was passed on the CLI:
@@ -50,88 +50,91 @@ current_index: The next index to read from argv, if needed.
 template <class Stream>
 auto parse_value(std::string_view& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
-	return get_next_value(argc, argv, current_value, current_index, errstream)
-	    .transform([&out](std::string_view result) { out = result; });
+	auto result = get_next_value(argc, argv, current_value, current_index, errstream);
+	if (result)
+	{
+		out = *result;
+	}
+	return result.has_value();
 }
 
 template <class Stream>
 auto parse_value(const char*& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
-	return get_next_value(argc, argv, current_value, current_index, errstream)
-	    .transform([&out](std::string_view result) { out = result.data(); });
+	auto result = get_next_value(argc, argv, current_value, current_index, errstream);
+	if (result)
+	{
+		out = result->data();
+	}
+	return result.has_value();
 }
 
 template <class T, class Stream>
 	requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
 auto parse_value(T& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
-	return get_next_value(argc, argv, current_value, current_index, errstream)
-	    .and_then(
-			[&out, &current_index](std::string_view result) -> expected<void>
-			{
-				const auto [ptr, ec] =
-					compat::from_chars(result.data(), result.data() + result.size(), out);
+	auto result = get_next_value(argc, argv, current_value, current_index, errstream);
+	if (!result)
+	{
+		return false;
+	}
 
-				if (ec == std::errc())
-				{
-					return {};
-				}
+	const auto [ptr, ec] = compat::from_chars(result->data(), result->data() + result->size(), out);
 
-				// By the contract of std::from_chars
-				assert(ec == std::errc::result_out_of_range || ec == std::errc::invalid_argument);
+	if (ec == std::errc())
+	{
+		return true;
+	}
 
-				const auto type = ec == std::errc::result_out_of_range
-		                              ? error_type::number_out_of_range
-		                              : error_type::not_a_number;
+	// By the contract of std::from_chars
+	assert(ec == std::errc::result_out_of_range || ec == std::errc::invalid_argument);
 
-				return compat::unexpected(error{
-					.type = type,
-					.arg_index = --current_index,
-				});
-			});
+	if (ec == std::errc::result_out_of_range)
+	{
+		output(errstream, "Value ({}) out of range", *result);
+	}
+	else
+	{
+		output(errstream, "Not a number ({})", *result);
+	}
+	return false;
 }
 
 // pair / tuple / array
 template <class T, class Stream, std::size_t... Is>
 auto parse_tuple_like_impl(T& out, const int argc, const char* const* argv,
                            std::optional<std::string_view> current_value, int& current_index,
-                           std::index_sequence<Is...>,
-                           [[maybe_unused]] Stream errstream) -> expected<void>
+                           std::index_sequence<Is...>, Stream errstream) -> bool
 {
 	constexpr auto n_elements = sizeof...(Is);
 	static_assert(n_elements > 0, "Requires non-empty pair/tuple");
 
-	expected<void> result;
 	const auto parser = [&]<std::size_t I>() -> bool
 	{
 		if constexpr (I == 0)
 		{
-			result =
-				parse_value(std::get<I>(out), argc, argv, current_value, current_index, errstream);
+			return parse_value(std::get<I>(out), argc, argv, current_value, current_index,
+			                   errstream);
 		}
 		else
 		{
-			result = parse_value(std::get<I>(out), argc, argv, {}, current_index, errstream);
+			return parse_value(std::get<I>(out), argc, argv, {}, current_index, errstream);
 		}
-
-		return result.has_value();
 	};
 
-	(parser.template operator()<Is>() && ...);
-
-	return result;
+	return (parser.template operator()<Is>() && ...);
 }
 
 template <class Stream, class... Ts>
 auto parse_value(std::tuple<Ts...>& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
 	return parse_tuple_like_impl(out, argc, argv, current_value, current_index,
 	                             std::make_index_sequence<sizeof...(Ts)>(), errstream);
@@ -140,7 +143,7 @@ auto parse_value(std::tuple<Ts...>& out, const int argc, const char* const* argv
 template <class T, class U, class Stream>
 auto parse_value(std::pair<T, U>& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
 	return parse_tuple_like_impl(out, argc, argv, current_value, current_index,
 	                             std::make_index_sequence<2>(), errstream);
@@ -149,35 +152,32 @@ auto parse_value(std::pair<T, U>& out, const int argc, const char* const* argv,
 template <class T, std::size_t N, class Stream>
 auto parse_value(std::array<T, N>& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
 	static_assert(N > 0, "Requires non-empty array");
 
 	{
-		const auto result =
-			parse_value(out[0], argc, argv, current_value, current_index, errstream);
-		if (!result)
+		if (!parse_value(out[0], argc, argv, current_value, current_index, errstream))
 		{
-			return result;
+			return false;
 		}
 	}
 
 	for (std::size_t i = 1; i < N; ++i)
 	{
-		const auto result = parse_value(out[i], argc, argv, {}, current_index, errstream);
-		if (!result)
+		if (!parse_value(out[i], argc, argv, {}, current_index, errstream))
 		{
-			return result;
+			return false;
 		}
 	}
 
-	return {};
+	return true;
 }
 
 template <class T, class Stream>
 auto parse_value(std::optional<T>& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
 	T result{};
 	const auto parse_result =
@@ -193,7 +193,7 @@ auto parse_value(std::optional<T>& out, const int argc, const char* const* argv,
 template <set_like T, class Stream>
 auto parse_value(T& out, const int argc, const char* const* argv,
                  std::optional<std::string_view> current_value, int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 Stream errstream) -> bool
 {
 	typename T::value_type to_insert;
 	const auto parse_result =
@@ -210,11 +210,10 @@ template <class Stream>
 auto parse_value(bool& out, [[maybe_unused]] const int argc,
                  [[maybe_unused]] const char* const* argv,
                  [[maybe_unused]] std::optional<std::string_view> current_value,
-                 [[maybe_unused]] int& current_index,
-                 [[maybe_unused]] Stream errstream) -> expected<void>
+                 [[maybe_unused]] int& current_index, [[maybe_unused]] Stream errstream) -> bool
 {
 	out = !out;
-	return {};
+	return true;
 }
 
 template <class T, std::size_t N>
@@ -228,7 +227,7 @@ consteval auto is_single_use_arg() -> bool
 template <class T, std::size_t I, class Stream>
 auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
                              std::optional<std::string_view> current_value, int& current_index,
-                             bool& used, [[maybe_unused]] Stream errstream) -> expected<void>
+                             bool& used, Stream errstream) -> bool
 {
 	constexpr auto memptr = std::get<I>(meta<T>::value.args_).memptr;
 
@@ -236,10 +235,8 @@ auto parse_value_into_struct(T& out, const int argc, const char* const* argv,
 	{
 		if (used)
 		{
-			return compat::unexpected(error{
-				.type = error_type::duplicate_arg,
-				.arg_index = --current_index,
-			});
+			output(errstream, "Duplicate keyword {}", argv[argc]);
+			return false;
 		}
 		used = true;
 	}

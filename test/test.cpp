@@ -33,11 +33,7 @@ int main(int argc, char* argv[])
 {
 	const auto result = cli::parse<mycli>(argc, argv);
 
-	if (!result)
-	{
-		cli::compat::println("{}", result.error().formatter<mycli>(argc, argv));
-	}
-	else
+	if (result)
 	{
 		const auto& out = result.value();
 		cli::compat::println("number: {}", out.number);

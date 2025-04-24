@@ -3,13 +3,14 @@
 #include <cli151/common.hpp>
 #include <cli151/detail/compat.hpp>
 #include <cli151/detail/helpers.hpp>
+#include <optional>
 
 namespace cli151
 {
 
 template <class T, class Stream = std::FILE*>
-auto parse(int argc, const char* const* argv,
-           [[maybe_unused]] Stream errstream = stderr) -> expected<T>
+auto parse(int argc, const char* const* argv, [[maybe_unused]] Stream errstream = stderr)
+	-> std::optional<T>
 {
 	// T is probably an aggregate. We 0-initialize (or whichever type of initialization C++ calls
 	// this) the result to prevent random values from appearing. Not sure if this should be part of
@@ -32,13 +33,6 @@ auto parse(int argc, const char* const* argv,
 	int arg_index = 1;
 	std::size_t next_positional_arg_to_parse = 0;
 
-	const auto call_handler = [&](const auto& parse_result)
-	{
-		const auto [handler_index, value] = parse_result;
-		const auto handler = dispatcher::index_to_handler_map[handler_index];
-		return handler(result, argc, argv, value, arg_index, used[handler_index], errstream);
-	};
-
 	while (arg_index < argc)
 	{
 		const std::string_view view = argv[arg_index];
@@ -47,24 +41,32 @@ auto parse(int argc, const char* const* argv,
 		{
 			// Long form
 
-			const auto handler_result =
-				detail::parse_long_keyword<T>(view, arg_index, errstream).and_then(call_handler);
-
-			if (!handler_result)
+			const auto kw_result = detail::parse_long_keyword<T>(view, arg_index, errstream);
+			if (!kw_result)
 			{
-				return compat::unexpected(handler_result.error());
+				return {};
+			}
+			const auto [handler_index, value] = *kw_result;
+			const auto handler = dispatcher::index_to_handler_map[handler_index];
+			if (!handler(result, argc, argv, value, arg_index, used[handler_index], errstream))
+			{
+				return {};
 			}
 		}
 		else if (view.starts_with('-'))
 		{
 			// Short form
 
-			const auto handler_result =
-				detail::parse_short_keyword<T>(view, arg_index, errstream).and_then(call_handler);
-
-			if (!handler_result)
+			const auto kw_result = detail::parse_short_keyword<T>(view, arg_index, errstream);
+			if (!kw_result)
 			{
-				return compat::unexpected(handler_result.error());
+				return {};
+			}
+			const auto [handler_index, value] = *kw_result;
+			const auto handler = dispatcher::index_to_handler_map[handler_index];
+			if (!handler(result, argc, argv, value, arg_index, used[handler_index], errstream))
+			{
+				return {};
 			}
 		}
 		else
@@ -74,10 +76,8 @@ auto parse(int argc, const char* const* argv,
 			if (next_positional_arg_to_parse >= dispatcher::positional_args_indexes.size())
 			{
 				// TODO: This may behave differently if there is a trailing container in T
-				return compat::unexpected(error{
-					.type = error_type::too_many_positional_args,
-					.arg_index = arg_index,
-				});
+				detail::output(errstream, "Too many positional args");
+				return {};
 			}
 
 			const auto handler_index =
@@ -85,12 +85,9 @@ auto parse(int argc, const char* const* argv,
 
 			const auto handler = dispatcher::index_to_handler_map[handler_index];
 
-			const auto handler_result =
-				handler(result, argc, argv, {}, arg_index, used[handler_index], errstream);
-
-			if (!handler_result)
+			if (!handler(result, argc, argv, {}, arg_index, used[handler_index], errstream))
 			{
-				return compat::unexpected(handler_result.error());
+				return {};
 			}
 		}
 	}

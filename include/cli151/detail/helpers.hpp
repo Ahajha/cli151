@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <optional>
 #include <string_view>
 #include <tuple> // IWYU pragma: keep (std::get<std::tuple>)
 #include <utility>
@@ -255,7 +256,7 @@ consteval auto make_positional_args_indexes_data()
 
 template <class T, class Out>
 using handler_t = auto (*)(T&, int, const char* const*, std::optional<std::string_view>, int&,
-                           bool&, Out) -> expected<void>;
+                           bool&, Out) -> bool;
 
 template <class T, class Stream, class Seq>
 struct handler_dispatcher_impl
@@ -294,7 +295,7 @@ using handler_dispatcher =
 template <class T, class Stream>
 auto parse_long_keyword(const std::string_view view, int& arg_index,
                         [[maybe_unused]] Stream errstream)
-	-> expected<std::pair<std::size_t, std::optional<std::string_view>>>
+	-> std::optional<std::pair<std::size_t, std::optional<std::string_view>>>
 {
 	using dispatcher = detail::handler_dispatcher<T, Stream>;
 
@@ -308,10 +309,8 @@ auto parse_long_keyword(const std::string_view view, int& arg_index,
 
 	if (handler_index == dispatcher::long_name_to_index_map.end())
 	{
-		return compat::unexpected(error{
-			.type = error_type::invalid_key,
-			.arg_index = arg_index,
-		});
+		output(errstream, "Unrecognized keyword argument {}", key);
+		return {};
 	}
 
 	const auto value = delimiter_pos == std::string_view::npos ? std::optional<std::string_view>{}
@@ -325,7 +324,7 @@ auto parse_long_keyword(const std::string_view view, int& arg_index,
 template <class T, class Stream>
 auto parse_short_keyword(const std::string_view view, int& arg_index,
                          [[maybe_unused]] Stream errstream)
-	-> expected<std::pair<std::size_t, std::optional<std::string_view>>>
+	-> std::optional<std::pair<std::size_t, std::optional<std::string_view>>>
 {
 	using dispatcher = detail::handler_dispatcher<T, Stream>;
 
@@ -339,10 +338,8 @@ auto parse_short_keyword(const std::string_view view, int& arg_index,
 
 	if (handler_index == dispatcher::short_name_to_index_map.end())
 	{
-		return compat::unexpected(error{
-			.type = error_type::invalid_key,
-			.arg_index = arg_index,
-		});
+		output(errstream, "Unrecognized keyword argument {}", key);
+		return {};
 	}
 
 	const auto value = delimiter_pos == std::string_view::npos ? std::optional<std::string_view>{}
@@ -351,21 +348,6 @@ auto parse_short_keyword(const std::string_view view, int& arg_index,
 	++arg_index;
 
 	return std::pair{handler_index->second, value};
-}
-
-// Wrapper to unify format_to() and print()
-
-template <class OutputIt, class... Args>
-OutputIt output(OutputIt out, compat::format_string<Args...> fmt, Args&&... args)
-{
-	return compat::format_to(out, fmt, std::forward<Args>(args)...);
-}
-
-template <class... Args>
-std::FILE* output(std::FILE* out, compat::format_string<Args...> fmt, Args&&... args)
-{
-	compat::print(out, fmt, std::forward<Args>(args)...);
-	return out;
 }
 
 } // namespace cli151::detail
