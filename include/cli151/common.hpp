@@ -21,39 +21,6 @@ constexpr static std::string_view default_ = "<default>";
 // no abbreviated name, or no long name.
 constexpr static std::string_view none = "";
 
-enum class error_type
-{
-	invalid_key,
-	not_a_number,
-	number_out_of_range,
-	too_many_positional_args,
-	not_enough_positional_args, // TODO this might need more data depending on how many missing args
-	                            // there are
-	duplicate_arg,
-};
-
-struct error;
-
-template <class T>
-struct error_formatter
-{
-	const error& err;
-	int argc;
-	const char* const* argv;
-};
-
-struct error
-{
-	error_type type;
-	int arg_index;
-
-	template <class T>
-	auto formatter(int argc, const char* const* argv) const -> error_formatter<T>
-	{
-		return error_formatter<T>{*this, argc, argv};
-	}
-};
-
 template <class T>
 struct usage_formatter
 {

@@ -1,5 +1,4 @@
 #include <cli151/cli151.hpp>
-#include <cli151/formatters/error/format.hpp>
 
 #include <optional>
 #include <string_view>

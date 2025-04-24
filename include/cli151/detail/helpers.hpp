@@ -293,8 +293,7 @@ using handler_dispatcher =
 	handler_dispatcher_impl<T, Stream, std::make_index_sequence<meta<T>::value.n_args>>;
 
 template <class T, class Stream>
-auto parse_long_keyword(const std::string_view view, int& arg_index,
-                        [[maybe_unused]] Stream errstream)
+auto parse_long_keyword(const std::string_view view, int& arg_index, Stream errstream)
 	-> std::optional<std::pair<std::size_t, std::optional<std::string_view>>>
 {
 	using dispatcher = detail::handler_dispatcher<T, Stream>;
@@ -322,8 +321,7 @@ auto parse_long_keyword(const std::string_view view, int& arg_index,
 }
 
 template <class T, class Stream>
-auto parse_short_keyword(const std::string_view view, int& arg_index,
-                         [[maybe_unused]] Stream errstream)
+auto parse_short_keyword(const std::string_view view, int& arg_index, Stream errstream)
 	-> std::optional<std::pair<std::size_t, std::optional<std::string_view>>>
 {
 	using dispatcher = detail::handler_dispatcher<T, Stream>;
