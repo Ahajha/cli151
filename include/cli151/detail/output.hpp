@@ -16,7 +16,7 @@ OutputIt output(OutputIt out, compat::format_string<Args...> fmt, Args&&... args
 }
 
 template <class... Args>
-std::FILE* output(FILE* out, compat::format_string<Args...> fmt, Args&&... args)
+FILE* output(FILE* out, compat::format_string<Args...> fmt, Args&&... args)
 {
 	compat::print(out, fmt, std::forward<Args>(args)...);
 	return out;

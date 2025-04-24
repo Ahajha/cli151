@@ -8,7 +8,7 @@
 namespace cli151
 {
 
-template <class T, class Stream = std::FILE*>
+template <class T, class Stream = FILE*>
 auto parse(int argc, const char* const* argv, [[maybe_unused]] Stream errstream = stderr)
 	-> std::optional<T>
 {
