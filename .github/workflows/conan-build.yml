@@ -74,10 +74,10 @@ jobs:
               libcxx: libstdc++11
               cppstd: 23
           # Windows/MSVC
-          - runner: windows-2019
+          - runner: windows-2022
             compiler:
               name: msvc
-              version: 192
+              version: 194
               cppstd: 20
             os: Windows
             arch: x86_64
