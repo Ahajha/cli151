@@ -156,11 +156,9 @@ auto parse_value(std::array<T, N>& out, const int argc, const char* const* argv,
 {
 	static_assert(N > 0, "Requires non-empty array");
 
+	if (!parse_value(out[0], argc, argv, current_value, current_index, errstream))
 	{
-		if (!parse_value(out[0], argc, argv, current_value, current_index, errstream))
-		{
-			return false;
-		}
+		return false;
 	}
 
 	for (std::size_t i = 1; i < N; ++i)
