@@ -1,0 +1,9 @@
+build --cxxopt=-std=c++23
+build --cxxopt=-fno-rtti
+build --cxxopt=-Wall
+build --cxxopt=-Wextra
+build --cxxopt=-Wpedantic
+build --cxxopt=-Wshadow
+build --cxxopt=-fno-exceptions
+build --cxxopt=-Wconversion
+build --cxxopt=-Werror

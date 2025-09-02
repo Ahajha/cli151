@@ -1,0 +1,31 @@
+"""CLI151"""
+
+bazel_dep(name = "rules_cc", version = "0.2.0")
+bazel_dep(name = "fmt", version = "11.2.0")
+bazel_dep(name = "doctest", version = "2.4.12", dev_dependency = True)
+bazel_dep(name = "hedron_compile_commands", dev_dependency = True)
+
+# Refresh compile commands with
+# bazelisk run @hedron_compile_commands//:refresh_all
+git_override(
+    module_name = "hedron_compile_commands",
+    remote = "https://github.com/hedronvision/bazel-compile-commands-extractor.git",
+    commit = "abb61a688167623088f8768cc9264798df6a9d10",
+)
+
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "frozen",
+    build_file_content = """
+cc_library(
+    name = "frozen",
+    hdrs = glob(["include/frozen/**/*.h"]),
+    visibility = ["//visibility:public"],
+    includes = ["include"],
+)
+""",
+    strip_prefix = "frozen-61dce5ae18ca59931e27675c468e64118aba8744",
+    sha256 = "bc2c99d2f543ecf7e67381adbeae96176ad7d4945a57077923ee2939c7f70685",
+    url = "https://github.com/serge-sans-paille/frozen/archive/61dce5ae18ca59931e27675c468e64118aba8744.tar.gz",
+)

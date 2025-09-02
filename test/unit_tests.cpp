@@ -1,8 +1,8 @@
 #include <cli151/cli151.hpp>
 namespace cli = cli151;
 
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#include <doctest/doctest.h>
+// Needs quotes for bazel setup, see https://github.com/doctest/doctest/issues/927
+#include "doctest/doctest.h"
 
 #include <array>
 #include <cstdint>
