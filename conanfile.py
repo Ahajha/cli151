@@ -49,11 +49,11 @@ class Cli151Conan(ConanFile):
         elif self.settings.compiler == "clang":
             # For the libstdc++ case, it depends on the installed version, which isn't typically
             # modeled in conan. To avoid going into the complexity of adding a setting, just assume
-            # no, and always fall back to fast_float. 
+            # no, and always fall back to fast_float.
             return False
         elif self.settings.compiler == "apple-clang":
             return False
-        
+
         # Otherwise, play it safe and assume we don't have it.
         return False
 
