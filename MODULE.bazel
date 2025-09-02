@@ -1,5 +1,7 @@
 """CLI151"""
 
+module_name(name = "cli151")
+
 bazel_dep(name = "rules_cc", version = "0.2.0")
 bazel_dep(name = "fmt", version = "11.2.0")
 bazel_dep(name = "doctest", version = "2.4.12", dev_dependency = True)
