@@ -6,6 +6,7 @@ cc_library(
     name = "cli151",
     hdrs = glob(["include/cli151/**"]),
     includes = ["include"],
+    visibility = ["//visibility:public"],
     deps = [
         "@fmt",
         "@frozen",
