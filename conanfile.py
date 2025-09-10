@@ -86,7 +86,7 @@ class Cli151Conan(ConanFile):
         if not self._has_std_from_chars:
             self.requires("fast_float/8.0.0")
         if not self._has_std_print:
-            self.requires("fmt/11.1.4")
+            self.requires("fmt/11.2.0")
 
         self.test_requires("doctest/2.4.11")
 
